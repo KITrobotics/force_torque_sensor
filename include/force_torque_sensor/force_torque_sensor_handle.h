@@ -100,6 +100,9 @@ class ForceTorqueSensorHandle : public hardware_interface::ForceTorqueSensorHand
 public:
 
   ForceTorqueSensorHandle(ros::NodeHandle &nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame);
+  ForceTorqueSensorHandle(ros::NodeHandle &nh, std::string sensor_name, std::string output_frame);
+  
+  void prepareNode(std::string output_frame);
 
   void init_sensor(std::string &msg, bool &success);
   bool srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
