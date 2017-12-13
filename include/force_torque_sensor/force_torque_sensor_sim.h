@@ -8,7 +8,10 @@
 
 #include <force_torque_sensor/force_torque_sensor_hw.h>
 
-class ForceTorqueSensorSim : public  ForceTorqueSensorHW
+namespace force_torque_sensor
+{
+
+class ForceTorqueSensorSim : public  hardware_interface::ForceTorqueSensorHW
 {
 public:
   ForceTorqueSensorSim();
@@ -28,5 +31,6 @@ private:
   ros::Subscriber force_input_subscriber;
 };
 
+}
 #endif
 

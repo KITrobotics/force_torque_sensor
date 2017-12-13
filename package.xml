@@ -70,6 +70,6 @@
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <hardware_interface plugin="${prefix}/force_torque_sensor_plugin.xml"/>
+    <force_torque_sensor plugin="${prefix}/force_torque_sensor_plugin.xml"/>
   </export>
 </package>

@@ -2,6 +2,9 @@
 #ifndef FORCETORQUESENSORHW_INCLUDEDEF_H
 #define FORCETORQUESENSORHW_INCLUDEDEF_H
 
+namespace hardware_interface
+{
+
 class ForceTorqueSensorHW
 {
 public:
@@ -15,5 +18,5 @@ public:
   virtual bool readDiagnosticADCVoltages(int index, short int& value) { return true; };
 };
 
+}
 #endif
-

@@ -43,7 +43,9 @@
 
 #include <force_torque_sensor/force_torque_sensor_handle.h>
 
-ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame) :
+using namespace force_torque_sensor;
+
+ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame) :
     hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     transform_frame_ = output_frame;

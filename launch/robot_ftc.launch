@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- send urdf to param server -->
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find schunk_description)/urdf/ftc/ftc050.urdf.xacro'" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+  <node name="fts" pkg="force_torque_sensor" type="force_torque_sensor_node" respawn="false" output="screen" >
+    <rosparam command="load" file="$(find schunk_pw70)/config/ftc_driver.yaml"/>
+  </node>
+
+  <rosparam command="load" file="$(find force_torque_sensor)/config/sensor_configuration.yaml"/>
+  <rosparam command="load" ns="Calibration/Offset" file="$(find ati_force_torque)/config/sensor_offset.yaml" />
+
+</launch>

@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_geometry_msgs
   tf2_ros
+  pluginlib
 )
 
 find_package(Eigen3)
@@ -67,7 +68,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS include
- CATKIN_DEPENDS geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs realtime_tools filters
+ CATKIN_DEPENDS geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs realtime_tools filters pluginlib
  DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_sim
 )
@@ -95,6 +96,9 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 add_library(${PROJECT_NAME}_sim src/force_torque_sensor_sim.cpp )
 target_link_libraries(${PROJECT_NAME}_sim ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_node src/force_torque_sensor_node.cpp)
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} )
+
 #############
 ## Install ##
 #############
@@ -113,6 +117,9 @@ install(DIRECTORY include
 install(DIRECTORY config cfg
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+install(FILES force_torque_sensor_plugin.xml
+DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 #############
 ## Testing ##

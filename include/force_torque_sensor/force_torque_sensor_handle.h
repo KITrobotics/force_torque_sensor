@@ -92,12 +92,14 @@ typedef unsigned char uint8_t;
 
 #define PI 3.14159265
 
+namespace force_torque_sensor
+{
 
 class ForceTorqueSensorHandle : public hardware_interface::ForceTorqueSensorHandle
 {
 public:
 
-  ForceTorqueSensorHandle(ros::NodeHandle &nh, ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame);
+  ForceTorqueSensorHandle(ros::NodeHandle &nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame);
 
   void init_sensor(std::string &msg, bool &success);
   bool srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
@@ -143,7 +145,7 @@ private:
   ros::NodeHandle nh_;
 
   //FT Data
-  ForceTorqueSensorHW *p_Ftc;
+  hardware_interface::ForceTorqueSensorHW *p_Ftc;
   geometry_msgs::Wrench offset_;
   geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
@@ -210,4 +212,5 @@ private:
 
 };
 
+}
 #endif

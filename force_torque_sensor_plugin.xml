@@ -1,5 +1,5 @@
 <library path="lib/libforce_torque_sensor_sim">
-  <class name="force_torque_sensor/ForceTorqueSensorSim" type="ForceTorqueSensorSim" base_class_type="ForceTorqueSensorHW">
+  <class name="force_torque_sensor/ForceTorqueSensorSim" type="force_torque_sensor::ForceTorqueSensorSim" base_class_type="hardware_interface::ForceTorqueSensorHW">
   <description>
     Simulated Force Torque Sensor
   </description>

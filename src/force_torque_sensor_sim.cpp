@@ -1,7 +1,8 @@
+#include <force_torque_sensor/force_torque_sensor_sim.h>
 
 #include <pluginlib/class_list_macros.h>
 
-#include <force_torque_sensor/force_torque_sensor_sim.h>
+using namespace force_torque_sensor;
 
 ForceTorqueSensorSim::ForceTorqueSensorSim()
 {
@@ -47,5 +48,4 @@ bool ForceTorqueSensorSim::readDiagnosticADCVoltages(int index, short int& value
     std::cout<<"ForceTorqueSensorSim"<<std::endl;
 }
 
-
-PLUGINLIB_EXPORT_CLASS(ForceTorqueSensorSim, ForceTorqueSensorHW)
+PLUGINLIB_EXPORT_CLASS(force_torque_sensor::ForceTorqueSensorSim, hardware_interface::ForceTorqueSensorHW)
