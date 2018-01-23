@@ -12,18 +12,32 @@ from geometry_msgs.msg import Vector3
 def calibrate_tool():
     
     rospy.init_node('calibrate_tool')    
-    trajectory_pub = rospy.Publisher('/arm/joint_trajectory_controller/command', JointTrajectory, latch=True, queue_size=1)
-    average_measurements_srv = rospy.ServiceProxy('/arm/CalculateAverageMasurement', CalculateAverageMasurement)
     
-    joint_names = rospy.get_param('/arm/joint_names')
-
     tool_name = rospy.get_param('~tool_name')
+    robot_name = rospy.get_param('~robot_name')
     store_to_file = rospy.get_param('~store_to_file')
+    robot = rospy.get_param('~robot')
+
+    if robot == "kuka":
+        joint_names = rospy.get_param('/controller_joint_names')
+        controller_topic = '/position_trajectory_controller/command'
+        calcOffset_service = '/CalculateAverageMasurement'
+    else:
+        joint_names = rospy.get_param('/arm/joint_names')
+        controller_topic = '/arm/joint_trajectory_controller/command'
+        calcOffset_service = '/arm/CalculateOffsets'
+
+    trajectory_pub = rospy.Publisher(controller_topic, JointTrajectory, latch=True, queue_size=1)
+    average_measurements_srv = rospy.ServiceProxy(calcOffset_service, CalculateAverageMasurement)
 
     # Posees
     poses = [[0.0, 0.0, 1.5707963, 0.0, -1.5707963, 0.0],
                    [0.0, 0.0, 1.5707963, 0.0, 1.5707963, 0.0],
                    [0.0, 0.0, 0.0, 0.0, 1.5707963, 0.0]]
+
+    poses_kuka = [[0.0, -1.5707963, 1.5707963, 0.0, -1.5707963, 0.0],
+                   [0.0, -1.5707963, 1.5707963, 0.0, 1.5707963, 0.0],
+                   [0.0, -1.5707963, 1.5707963, 0.0, 0.0, 0.0]]
 
     measurement = []
     
@@ -34,11 +48,14 @@ def calibrate_tool():
         trajectory.joint_names = joint_names
         
         point.time_from_start = rospy.Duration(5.0)
-        point.positions = poses[i]
+        if robot == "kuka":
+            point.positions = poses_kuka[i]
+        else:
+            point.positions = poses[i]
         
         trajectory.points.append(point)
         trajectory_pub.publish(trajectory)
-        rospy.loginfo("Going to position: " + str(poses[i]))
+        rospy.loginfo("Going to position: " + str(point.positions))
         
         rospy.sleep(10.0)
         
@@ -62,7 +79,7 @@ def calibrate_tool():
     rospy.set_param('/temp/tool/force', Fg)
     
     if store_to_file:
-      call("rosparam dump -v `rospack find iirob_description`/tools/urdf/" + tool_name + "/gravity.yaml /temp/tool", shell=True)
+      call("rosparam dump -v `rospack find iirob_description`/tools/urdf/" + tool_name + "/" + robot_name + "_gravity.yaml /temp/tool", shell=True)
 
 
 if __name__ == "__main__":

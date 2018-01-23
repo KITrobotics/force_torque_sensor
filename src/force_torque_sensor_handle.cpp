@@ -58,21 +58,17 @@ ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, std::strin
     hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     node_params_.fromParamServer();
-    
-    boost::shared_ptr<pluginlib::ClassLoader<hardware_interface::ForceTorqueSensorHW>> sensor_loader_;
-    boost::shared_ptr<hardware_interface::ForceTorqueSensorHW> sensor;
 
     //load specified sensor HW
     sensor_loader_.reset (new pluginlib::ClassLoader<hardware_interface::ForceTorqueSensorHW>("force_torque_sensor", "hardware_interface::ForceTorqueSensorHW"));
-    std::string param_name = "/Node/sensor_hw";
-    if (nh.getParam (param_name, node_params_.sensor_hw))
+    if (!node_params_.sensor_hw.empty())
       {
         try
           {
-            sensor.reset (sensor_loader_->createUnmanagedInstance (node_params_.sensor_hw));
-            ROS_INFO_STREAM ("IK type " << node_params_.sensor_hw << " was successfully loaded.");
+            sensor_.reset (sensor_loader_->createUnmanagedInstance (node_params_.sensor_hw));
+            ROS_INFO_STREAM ("Sensor type " << node_params_.sensor_hw << " was successfully loaded.");
             
-            p_Ftc = sensor.get();
+            p_Ftc = sensor_.get();
             prepareNode(output_frame);
           }
         catch (pluginlib::PluginlibException& e)
@@ -82,7 +78,7 @@ ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, std::strin
       }
     else
       {
-        ROS_ERROR_STREAM ("Failed to getParam '" << param_name << "' (namespace: " << nh.getNamespace() << ").");
+        ROS_ERROR_STREAM ("Failed to getParam 'sensor_hw' (namespace: " << nh.getNamespace() << ").");
         ROS_ERROR ("Sensor hardware failed to load");
       }
 }
@@ -90,7 +86,11 @@ ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, std::strin
 
 void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
 {    
+    ROS_INFO_STREAM ("Sensor is using namespace '" << nh_.getNamespace() << "'.");
+
     transform_frame_ = output_frame;
+
+    reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensorHandle::reconfigureCalibrationRequest, this, _1, _2));
 
     calibration_params_.fromParamServer();
     CS_params_.fromParamServer();
@@ -134,9 +134,7 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueSensorHandle::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensorHandle::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensorHandle::srvCallback_recalibrate, this);
-
-    reconfigCalibrationSrv_.setCallback(boost::bind(&ForceTorqueSensorHandle::reconfigureCalibrationRequest, this, _1, _2));
-
+ 
     // Read data from parameter server
     canType = can_params_.type;
     canPath = can_params_.path;
@@ -183,10 +181,10 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     ftUpdateTimer_ = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensorHandle::updateFTData, this, false, false);
     ftPullTimer_ = nh_.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensorHandle::pullFTData, this, false, false);
 
-    moving_mean_filter_->configure("MovingMeanFilter");
-    low_pass_filter_->configure("LowPassFilter");
-    gravity_compensator_->configure("GravityCompensation");
-    threshold_filter_->configure("ThresholdFilter");
+    moving_mean_filter_->configure(nh_.getNamespace()+"/MovingMeanFilter");
+    low_pass_filter_->configure(nh_.getNamespace()+"/LowPassFilter");
+    gravity_compensator_->configure(nh_.getNamespace()+"/GravityCompensation");
+    threshold_filter_->configure(nh_.getNamespace()+"/ThresholdFilter");
 
     //Median Filter
     if(nh_.hasParam("MovingMeanFilter")) {
@@ -498,42 +496,43 @@ void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
             sensor_data.wrench.torque.z -= offset_.torque.z;
         }
 
-    //lowpass
-    low_pass_filtered_data.header = sensor_data.header;
-	if(useLowPassFilter){
-        std::vector<double> in_data= {(double)sensor_data.wrench.force.x, double(sensor_data.wrench.force.y), (double)sensor_data.wrench.force.z,(double)sensor_data.wrench.torque.x,(double)sensor_data.wrench.torque.y,(double)sensor_data.wrench.torque.z};
-        std::vector<double> out_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};
+        //lowpass
+        low_pass_filtered_data.header = sensor_data.header;
+        if(useLowPassFilter){
+            std::vector<double> in_data= {(double)sensor_data.wrench.force.x, double(sensor_data.wrench.force.y), (double)sensor_data.wrench.force.z,(double)sensor_data.wrench.torque.x,(double)sensor_data.wrench.torque.y,(double)sensor_data.wrench.torque.z};
+            std::vector<double> out_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};
 
-        low_pass_filter_->update(sensor_data,low_pass_filtered_data);
-    }
-    else low_pass_filtered_data = sensor_data;
-    //moving_mean
-	moving_mean_filtered_wrench.header = low_pass_filtered_data.header;
-    if(useMovingMean){
-        std::vector<double> in_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};
-        std::vector<double> out_data = {(double)moving_mean_filtered_wrench.wrench.force.x, double(moving_mean_filtered_wrench.wrench.force.y), (double)moving_mean_filtered_wrench.wrench.force.z,(double)moving_mean_filtered_wrench.wrench.torque.x,(double)moving_mean_filtered_wrench.wrench.torque.y,(double)moving_mean_filtered_wrench.wrench.torque.z};
+            low_pass_filter_->update(sensor_data,low_pass_filtered_data);
+        }
+        else low_pass_filtered_data = sensor_data;
 
-        moving_mean_filter_->update(low_pass_filtered_data, moving_mean_filtered_wrench);
-    }
-    else moving_mean_filtered_wrench = low_pass_filtered_data;
+        //moving_mean
+        moving_mean_filtered_wrench.header = low_pass_filtered_data.header;
+        if(useMovingMean){
+            std::vector<double> in_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};
+            std::vector<double> out_data = {(double)moving_mean_filtered_wrench.wrench.force.x, double(moving_mean_filtered_wrench.wrench.force.y), (double)moving_mean_filtered_wrench.wrench.force.z,(double)moving_mean_filtered_wrench.wrench.torque.x,(double)moving_mean_filtered_wrench.wrench.torque.y,(double)moving_mean_filtered_wrench.wrench.torque.z};
 
-        if(is_pub_sensor_data_)
-            if (sensor_data_pub_->trylock()){
-                sensor_data_pub_->msg_ = sensor_data;
-                sensor_data_pub_->unlockAndPublish();
-            }
+            moving_mean_filter_->update(low_pass_filtered_data, moving_mean_filtered_wrench);
+        }
+        else moving_mean_filtered_wrench = low_pass_filtered_data;
 
-        if(is_pub_low_pass_)
-             if (low_pass_pub_->trylock()){
-                low_pass_pub_->msg_ = low_pass_filtered_data;
-                low_pass_pub_->unlockAndPublish();
-            }
+            if(is_pub_sensor_data_)
+                if (sensor_data_pub_->trylock()){
+                    sensor_data_pub_->msg_ = sensor_data;
+                    sensor_data_pub_->unlockAndPublish();
+                }
 
-        if(is_pub_moving_mean_)
-             if (moving_mean_pub_->trylock()){
-                moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
-                moving_mean_pub_->unlockAndPublish();
-            }
+            if(is_pub_low_pass_)
+                if (low_pass_pub_->trylock()){
+                    low_pass_pub_->msg_ = low_pass_filtered_data;
+                    low_pass_pub_->unlockAndPublish();
+                }
+
+            if(is_pub_moving_mean_)
+                if (moving_mean_pub_->trylock()){
+                    moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
+                    moving_mean_pub_->unlockAndPublish();
+                }
     }
 }
 
@@ -588,12 +587,12 @@ bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::stri
   try
     {
         transform = p_tfBuffer->lookupTransform(goal_frame, source_frame, ros::Time(0));
-	_num_transform_errors = 0;
+        _num_transform_errors = 0;
     }
     catch (tf2::TransformException ex)
     {
       if (_num_transform_errors%100 == 0){
-	ROS_ERROR("%s", ex.what());
+            ROS_ERROR("%s", ex.what());
       }
       _num_transform_errors++;
       return false;
@@ -632,6 +631,7 @@ void ForceTorqueSensorHandle::reconfigureCalibrationRequest(force_torque_sensor:
 void ForceTorqueSensorHandle::updateFTData(const ros::TimerEvent& event)
 {
     filterFTData();
+
     interface_force_[0] = threshold_filtered_force.wrench.force.x;
     interface_force_[1] = threshold_filtered_force.wrench.force.y;
     interface_force_[2] = threshold_filtered_force.wrench.force.z;

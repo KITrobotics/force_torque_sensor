@@ -9,12 +9,22 @@ from geometry_msgs.msg import Wrench
 
 def calculate_sensor_offsets():
     
-    rospy.init_node('calculate_offsets')    
-    trajectory_pub = rospy.Publisher('/arm/joint_trajectory_controller/command', JointTrajectory, latch=True, queue_size=1)
-    calculate_offsets_srv = rospy.ServiceProxy('/arm/CalculateOffsets', CalculateSensorOffset)
+    rospy.init_node('calculate_offsets')
     
-    joint_names = rospy.get_param('/arm/joint_names')
-    store_to_file = rospy.get_param('~store_to_file')    
+    package_to_store = rospy.get_param('~package_to_store')
+    store_to_file = rospy.get_param('~store_to_file')
+    robot = rospy.get_param('~robot')
+    if robot == "kuka":
+        joint_names = rospy.get_param('/controller_joint_names')
+        controller_topic = '/position_trajectory_controller/command'
+        calcOffset_service = '/CalculateOffsets'
+    else:
+        joint_names = rospy.get_param('/arm/joint_names')
+        controller_topic = '/arm/joint_trajectory_controller/command'
+        calcOffset_service = '/arm/CalculateOffsets'
+
+    trajectory_pub = rospy.Publisher(controller_topic, JointTrajectory, latch=True, queue_size=1)
+    calculate_offsets_srv = rospy.ServiceProxy(calcOffset_service, CalculateSensorOffset)
     
     ##print call('rospack find force_torque_sensor', shell=True)
     ##call('rosparam dump -v `rospack find force_torque_sensor`/config/sensor_offset.yaml /fts/Offset')
@@ -22,6 +32,9 @@ def calculate_sensor_offsets():
     # Posees
     poses = [[0.0, 0.0, 1.5707963, 0.0, -1.5707963, 0.0],
              [0.0, 0.0, 1.5707963, 0.0, 1.5707963, 0.0]]
+
+    poses_kuka = [[0.0, -1.5707963, 1.5707963, 0.0, -1.5707963, 0.0],
+             [0.0, -1.5707963, 1.5707963, 0.0, 1.5707963, 0.0]]
 
     measurement = Wrench()
     
@@ -32,11 +45,14 @@ def calculate_sensor_offsets():
         trajectory.joint_names = joint_names
         
         point.time_from_start = rospy.Duration(5.0)
-        point.positions = poses[i]
+        if robot == "kuka":
+            point.positions = poses_kuka[i]
+        else:
+            point.positions = poses[i]
         
         trajectory.points.append(point)        
         trajectory_pub.publish(trajectory)            
-        rospy.loginfo("Going to position: " + str(poses[i]))
+        rospy.loginfo("Going to position: " + str(point.positions))
                 
         rospy.sleep(10.0)
         
@@ -65,7 +81,7 @@ def calculate_sensor_offsets():
     rospy.set_param('/temp/Offset/torque/z', measurement.torque.z)    
 
     if store_to_file:
-      call('rosparam dump -v `rospack find force_torque_sensor`/config/sensor_offset.yaml /temp/Offset', shell=True)
+      call('rosparam dump -v `rospack find ' + package_to_store + ' `/config/sensor_offset.yaml /temp/Offset', shell=True)
 
 
 if __name__ == "__main__":

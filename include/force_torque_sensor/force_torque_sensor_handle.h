@@ -213,6 +213,8 @@ private:
 
   void reconfigureCalibrationRequest(force_torque_sensor::CalibrationConfig& config, uint32_t level);
 
+  boost::shared_ptr<pluginlib::ClassLoader<hardware_interface::ForceTorqueSensorHW>> sensor_loader_;
+  boost::shared_ptr<hardware_interface::ForceTorqueSensorHW> sensor_;
 };
 
 }

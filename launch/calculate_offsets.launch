@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  
+  <arg name="store_to_file" default="true"/>
+  <arg name="package_to_store" default="force_torque_sensor"/>
+  <arg name="robot" default="schunk"/>
+    
+  <node pkg="force_torque_sensor" type="calculate_offsets.py" name="calculate_offsets" cwd="node" respawn="false" output="screen">
+    <param name="store_to_file" value="$(arg store_to_file)"/>
+    <param name="package_to_store" value="$(arg package_to_store)"/>
+    <param name="robot" value="$(arg robot)"/>
+  </node>
+
+</launch>
