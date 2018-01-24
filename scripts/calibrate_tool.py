@@ -73,9 +73,9 @@ def calibrate_tool():
 
     rospy.loginfo("Setting parametes for tool: " + tool_name)
 
-    rospy.set_param('/temp/tool/CoG/x', CoG.x)
-    rospy.set_param('/temp/tool/CoG/y', CoG.y)
-    rospy.set_param('/temp/tool/CoG/z', CoG.z)
+    rospy.set_param('/temp/tool/CoG_x', CoG.x)
+    rospy.set_param('/temp/tool/CoG_y', CoG.y)
+    rospy.set_param('/temp/tool/CoG_z', CoG.z)
     rospy.set_param('/temp/tool/force', Fg)
     
     if store_to_file:
