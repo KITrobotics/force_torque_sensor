@@ -44,7 +44,7 @@ def calculate_sensor_offsets():
         trajectory.header.stamp = rospy.Time.now()
         trajectory.joint_names = joint_names
         
-        point.time_from_start = rospy.Duration(5.0)
+        point.time_from_start = rospy.Duration(2.5)
         if robot == "kuka":
             point.positions = poses_kuka[i]
         else:
