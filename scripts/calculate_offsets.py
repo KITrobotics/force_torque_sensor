@@ -13,6 +13,7 @@ def calculate_sensor_offsets():
     
     package_to_store = rospy.get_param('~package_to_store')
     store_to_file = rospy.get_param('~store_to_file')
+    scenario = rospy.get_param('~scenario')
     robot = rospy.get_param('~robot')
     if robot == "kuka":
         joint_names = rospy.get_param('/controller_joint_names')
@@ -81,7 +82,10 @@ def calculate_sensor_offsets():
     rospy.set_param('/temp/Offset/torque/z', measurement.torque.z)    
 
     if store_to_file:
-      call('rosparam dump -v `rospack find ' + package_to_store + ' `/config/sensor_offset.yaml /temp/Offset', shell=True)
+        if scenario == '':
+            call('rosparam dump -v `rospack find ' + package_to_store + ' `/config/sensor_offset.yaml /temp/Offset', shell=True)
+        else:
+            call('rosparam dump -v `rospack find ' + package_to_store + ' `/config/robot_with_' + scenario + '_offset.yaml /temp/Offset', shell=True)
 
 
 if __name__ == "__main__":
