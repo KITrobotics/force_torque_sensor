@@ -122,8 +122,8 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     m_calibOffset.force.y = forceVal["y"];
     m_calibOffset.force.z = forceVal["z"];
     m_calibOffset.torque.x = torqueVal["x"];
-    m_calibOffset.torque.x = torqueVal["y"];
-    m_calibOffset.torque.x = torqueVal["z"];
+    m_calibOffset.torque.y = torqueVal["y"];
+    m_calibOffset.torque.z = torqueVal["z"];
 
     bool isAutoInit = false;
     m_isInitialized = false;
