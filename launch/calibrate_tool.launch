@@ -3,7 +3,7 @@
     
   <arg name="tool_name" default="fts"/>
   <arg name="store_to_file" default="true"/>
-  <arg name="robot_name" default="kr5"/>
+  <arg name="robot_name" default="r5"/>
   <arg name="robot" default="schunk"/>
   
   <node pkg="force_torque_sensor" type="calibrate_tool.py" name="calibrate_tool" cwd="node" respawn="false" output="screen">

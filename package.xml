@@ -54,7 +54,9 @@
   <depend>dynamic_reconfigure</depend>
   <depend>filters</depend>
   <depend>geometry_msgs</depend>
+  <depend>hardware_interface</depend>
   <depend>iirob_filters</depend>
+  <depend>pluginlib</depend>
   <depend>realtime_tools</depend>
   <depend>roscpp</depend>
   <depend>rosparam_handler</depend>
@@ -64,7 +66,6 @@
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
-  <depend>pluginlib</depend>
 
   <exec_depend>message_runtime</exec_depend>
 

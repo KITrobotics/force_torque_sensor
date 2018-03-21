@@ -68,8 +68,8 @@ def calibrate_tool():
     CoG = Vector3()
 
     Fg = (abs(measurement[0].force.z) + abs(measurement[1].force.z))/2.0;
-    #CoG.z = (sqrt(measurement[2].torque.x*measurement[2].torque.x + measurement[2].torque.y*measurement[2].torque.y)) / Fg;
-    CoG.z = (measurement[2].torque.y) / Fg;
+    CoG.z = (sqrt(measurement[2].torque.x*measurement[2].torque.x + measurement[2].torque.y*measurement[2].torque.y)) / Fg;
+    #CoG.z = (measurement[2].torque.x) / Fg;
 
     rospy.loginfo("Setting parametes for tool: " + tool_name)
 

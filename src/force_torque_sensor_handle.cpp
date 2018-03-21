@@ -181,29 +181,28 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     ftUpdateTimer_ = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensorHandle::updateFTData, this, false, false);
     ftPullTimer_ = nh_.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensorHandle::pullFTData, this, false, false);
 
-    moving_mean_filter_->configure(nh_.getNamespace()+"/MovingMeanFilter");
-    low_pass_filter_->configure(nh_.getNamespace()+"/LowPassFilter");
-    gravity_compensator_->configure(nh_.getNamespace()+"/GravityCompensation");
-    threshold_filter_->configure(nh_.getNamespace()+"/ThresholdFilter");
-
     //Median Filter
     if(nh_.hasParam("MovingMeanFilter")) {
-    useMovingMean = true;
+        useMovingMean = true;
+        moving_mean_filter_->configure(nh_.getNamespace()+"/MovingMeanFilter");
     }
 
     //Low Pass Filter
     if(nh_.hasParam("LowPassFilter")) {
-    useLowPassFilter = true;
+        useLowPassFilter = true;
+        low_pass_filter_->configure(nh_.getNamespace()+"/LowPassFilter");
     }
 
     //Gravity Compenstation
     if(nh_.hasParam("GravityCompensation")) {
         useGravityCompensator = true;
+        gravity_compensator_->configure(nh_.getNamespace()+"/GravityCompensation");
     }
 
     //Threshold Filter
     if(nh_.hasParam("ThresholdFilter")) {
         useThresholdFilter = true;
+        threshold_filter_->configure(nh_.getNamespace()+"/ThresholdFilter");
     }
 
     p_Ftc->initCommunication(canType, canPath, canBaudrate, ftsBaseID);
@@ -237,7 +236,7 @@ void ForceTorqueSensorHandle::init_sensor(std::string& msg, bool& success)
             // Calibrate sensor
             if (m_staticCalibration)
             {
-                ROS_INFO("Using static calibration from paramter server with parametes Force: x:%f, y:%f, z:%f; Torque: x: %f, y:%f, z:%f;",
+                ROS_INFO("Using static Calibration Offset from paramter server with parametes Force: x:%f, y:%f, z:%f; Torque: x: %f, y:%f, z:%f;",
 		  m_calibOffset.force.x, m_calibOffset.force.y, m_calibOffset.force.z,
 		  m_calibOffset.torque.x, m_calibOffset.torque.y, m_calibOffset.torque.z
 		);
@@ -376,7 +375,7 @@ bool ForceTorqueSensorHandle::calibrate(bool apply_after_calculation, geometry_m
         offset_ = temp_offset;
     }
 
-    ROS_INFO("Calibration Data: Fx: %f; Fy: %f; Fz: %f; Mx: %f; My: %f; Mz: %f", temp_offset.force.x, temp_offset.force.y, temp_offset.force.z, temp_offset.torque.x, temp_offset.torque.y, temp_offset.torque.z);
+    ROS_INFO("Calculated Calibration Offset: Fx: %f; Fy: %f; Fz: %f; Mx: %f; My: %f; Mz: %f", temp_offset.force.x, temp_offset.force.y, temp_offset.force.z, temp_offset.torque.x, temp_offset.torque.y, temp_offset.torque.z);
 
     m_isCalibrated = true;
     *new_offset = temp_offset;
@@ -516,23 +515,23 @@ void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
         }
         else moving_mean_filtered_wrench = low_pass_filtered_data;
 
-            if(is_pub_sensor_data_)
-                if (sensor_data_pub_->trylock()){
-                    sensor_data_pub_->msg_ = sensor_data;
-                    sensor_data_pub_->unlockAndPublish();
-                }
+        if(is_pub_sensor_data_)
+            if (sensor_data_pub_->trylock()){
+                sensor_data_pub_->msg_ = sensor_data;
+                sensor_data_pub_->unlockAndPublish();
+            }
 
-            if(is_pub_low_pass_)
-                if (low_pass_pub_->trylock()){
-                    low_pass_pub_->msg_ = low_pass_filtered_data;
-                    low_pass_pub_->unlockAndPublish();
-                }
+        if(is_pub_low_pass_)
+            if (low_pass_pub_->trylock()){
+                low_pass_pub_->msg_ = low_pass_filtered_data;
+                low_pass_pub_->unlockAndPublish();
+            }
 
-            if(is_pub_moving_mean_)
-                if (moving_mean_pub_->trylock()){
-                    moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
-                    moving_mean_pub_->unlockAndPublish();
-                }
+        if(is_pub_moving_mean_)
+            if (moving_mean_pub_->trylock()){
+                moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
+                moving_mean_pub_->unlockAndPublish();
+            }
     }
 }
 
@@ -545,8 +544,6 @@ void ForceTorqueSensorHandle::filterFTData(){
       //gravity compensation
       if(useGravityCompensator)
       {
-          std::vector<double> in_data= {(double)transformed_data.wrench.force.x, double(transformed_data.wrench.force.y), (double)transformed_data.wrench.force.z,(double)transformed_data.wrench.torque.x,(double)transformed_data.wrench.torque.y,(double)transformed_data.wrench.torque.z};
-          std::vector<double> out_data = {(double)gravity_compensated_force.wrench.force.x, double(gravity_compensated_force.wrench.force.y), (double)gravity_compensated_force.wrench.force.z,(double)gravity_compensated_force.wrench.torque.x,(double)gravity_compensated_force.wrench.torque.y,(double)gravity_compensated_force.wrench.torque.z};
           gravity_compensator_->update(transformed_data, gravity_compensated_force);
       }
       else gravity_compensated_force = transformed_data;
@@ -554,8 +551,6 @@ void ForceTorqueSensorHandle::filterFTData(){
       //treshhold filtering
       if(useThresholdFilter)
       {
-          std::vector<double> in_data= {(double)gravity_compensated_force.wrench.force.x, double(gravity_compensated_force.wrench.force.y), (double)gravity_compensated_force.wrench.force.z,(double)gravity_compensated_force.wrench.torque.x,(double)gravity_compensated_force.wrench.torque.y,(double)gravity_compensated_force.wrench.torque.z};
-          std::vector<double> out_data = {(double)threshold_filtered_force.wrench.force.x, double(threshold_filtered_force.wrench.force.y), (double)threshold_filtered_force.wrench.force.z,(double)threshold_filtered_force.wrench.torque.x,(double)threshold_filtered_force.wrench.torque.y,(double)threshold_filtered_force.wrench.torque.z};
           threshold_filter_->update(gravity_compensated_force, threshold_filtered_force);
       }
       else threshold_filtered_force = gravity_compensated_force;
