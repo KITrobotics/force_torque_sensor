@@ -34,9 +34,9 @@ else()
 endif()
 
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" Cpp11CompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++14" Cpp11CompilerFlag)
 if (${Cpp11CompilerFlag})
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif()
 
 generate_ros_parameter_files(
