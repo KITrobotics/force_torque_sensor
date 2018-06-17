@@ -88,14 +88,15 @@ add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_gencfg  # For dynamic_reconfigure
   ${PROJECT_NAME}_generate_messages_cpp
   ${PROJECT_NAME}_genparam # For rosparam_handler
-  )
+)
+
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 add_library(${PROJECT_NAME}_sim src/force_torque_sensor_sim.cpp )
 target_link_libraries(${PROJECT_NAME}_sim ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_node src/force_torque_sensor_node.cpp)
-target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} )
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 #############
 ## Install ##
