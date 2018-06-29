@@ -3,6 +3,6 @@
     local-name: iirob_filters
     version: kinetic-devel
 - git:
-    uri: 'https://github.com/cbandera/rosparam_handler.git'
+    uri: 'https://github.com/iirob/rosparam_handler.git'
     local-name: rosparam_handler
     version: master

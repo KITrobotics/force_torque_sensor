@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(force_torque_sensor)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
-
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -38,7 +35,7 @@ endif()
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" Cpp11CompilerFlag)
-if (Cpp11CompilerFlag)
+if (${Cpp11CompilerFlag})
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
@@ -92,37 +89,33 @@ add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_gencfg  # For dynamic_reconfigure
   ${PROJECT_NAME}_generate_messages_cpp
   ${PROJECT_NAME}_genparam # For rosparam_handler
-  )
+)
+
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 add_library(${PROJECT_NAME}_sim src/force_torque_sensor_sim.cpp )
 target_link_libraries(${PROJECT_NAME}_sim ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_node src/force_torque_sensor_node.cpp)
-target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES} )
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 #############
 ## Install ##
 #############
-install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_sim
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_sim ${PROJECT_NAME}_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY include
+install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
 )
 
-install(DIRECTORY config cfg
+install(DIRECTORY config/ cfg/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 install(FILES force_torque_sensor_plugin.xml
 DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-#############
-## Testing ##
-#############
