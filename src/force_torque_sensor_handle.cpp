@@ -134,6 +134,7 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueSensorHandle::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensorHandle::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensorHandle::srvCallback_recalibrate, this);
+    srvServer_SetSensorOffset = nh_.advertiseService("SetSensorOffset", &ForceTorqueSensorHandle::srvCallback_setSensorOffset, this);
  
     // Read data from parameter server
     canType = can_params_.type;
@@ -363,6 +364,21 @@ bool ForceTorqueSensorHandle::srvCallback_recalibrate(std_srvs::Trigger::Request
     res.message = "Successfully recalibrated FTS!";
     return true;
 }
+
+bool ForceTorqueSensorHandle::srvCallback_setSensorOffset(force_torque_sensor::SetSensorOffset::Request &req, force_torque_sensor::SetSensorOffset::Response &res)
+{
+    offset_.force.x = req.offset.force.x;
+    offset_.force.y = req.offset.force.y;
+    offset_.force.z = req.offset.force.z;
+    offset_.torque.x = req.offset.torque.x;
+    offset_.torque.y = req.offset.torque.y;
+    offset_.torque.z = req.offset.torque.z;
+
+    res.success = true;
+    res.message = "Offset is successfully set!";
+    return true;
+}
+
 
 bool ForceTorqueSensorHandle::calibrate(bool apply_after_calculation, geometry_msgs::Wrench *new_offset)
 {
@@ -604,23 +620,23 @@ bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::stri
     return true;
 }
 
-void ForceTorqueSensorHandle::reconfigureCalibrationRequest(force_torque_sensor::CalibrationConfig& config, uint32_t level){
+void ForceTorqueSensorHandle::reconfigureCalibrationRequest(force_torque_sensor::CalibrationConfig& config, uint32_t level)
+{
     calibration_params_.fromConfig(config);
 
     calibrationTBetween = calibration_params_.T_between_meas;
     m_staticCalibration = calibration_params_.isStatic;
 
-    std::map<std::string,double> forceVal,torqueVal;
-    forceVal = calibration_params_.force;
-    torqueVal = calibration_params_.torque;
-
-    m_calibOffset.force.x = forceVal["x"];
-    m_calibOffset.force.y = forceVal["y"];
-    m_calibOffset.force.z = forceVal["z"];
-    m_calibOffset.torque.x = torqueVal["x"];
-    m_calibOffset.torque.x = torqueVal["y"];
-    m_calibOffset.torque.x = torqueVal["z"];
-
+//     std::map<std::string,double> forceVal,torqueVal;
+//     forceVal = calibration_params_.force;
+//     torqueVal = calibration_params_.torque;
+//
+//     m_calibOffset.force.x = forceVal["x"];
+//     m_calibOffset.force.y = forceVal["y"];
+//     m_calibOffset.force.z = forceVal["z"];
+//     m_calibOffset.torque.x = torqueVal["x"];
+//     m_calibOffset.torque.y = torqueVal["y"];
+//     m_calibOffset.torque.z = torqueVal["z"];
 }
 
 void ForceTorqueSensorHandle::updateFTData(const ros::TimerEvent& event)

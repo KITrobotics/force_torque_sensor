@@ -56,6 +56,7 @@ add_service_files(
   CalculateAverageMasurement.srv
   CalculateSensorOffset.srv
   DiagnosticVoltages.srv
+  SetSensorOffset.srv
 )
 
 generate_messages(

@@ -5,12 +5,18 @@
   <arg name="package_to_store" default="force_torque_sensor"/>
   <arg name="robot" default="schunk"/>
   <arg name="scenario" default=""/>
+  <arg name="set_calculated_offset" default="false"/>
+  <arg name="offset_params_ns" default="/temp"/>
+  <arg name="recalibrate_srv_ns" default=""/>
     
   <node pkg="force_torque_sensor" type="calculate_offsets.py" name="calculate_offsets" cwd="node" respawn="false" output="screen">
     <param name="store_to_file" value="$(arg store_to_file)"/>
     <param name="package_to_store" value="$(arg package_to_store)"/>
     <param name="robot" value="$(arg robot)"/>
     <param name="scenario" value="$(arg scenario)"/>
+    <param name="set_calculated_offset" value="$(arg set_calculated_offset)"/>
+    <param name="offset_params_ns" value="$(arg offset_params_ns)"/>
+    <param name="recalibrate_srv_ns" value="$(arg recalibrate_srv_ns)"/>
   </node>
 
 </launch>

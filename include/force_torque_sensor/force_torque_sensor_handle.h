@@ -65,6 +65,7 @@ typedef unsigned char uint8_t;
 #include <force_torque_sensor/CalculateAverageMasurement.h>
 #include <force_torque_sensor/CalculateSensorOffset.h>
 #include <force_torque_sensor/DiagnosticVoltages.h>
+#include <force_torque_sensor/SetSensorOffset.h>
 
 
 #include <iirob_filters/gravity_compensation.h>
@@ -113,6 +114,8 @@ public:
   bool srvReadDiagnosticVoltages(force_torque_sensor::DiagnosticVoltages::Request &req,
                                  force_torque_sensor::DiagnosticVoltages::Response &res);
   bool srvCallback_recalibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool srvCallback_setSensorOffset(force_torque_sensor::SetSensorOffset::Request &req,
+                                 force_torque_sensor::SetSensorOffset::Response &res);
 
 private:
   void updateFTData(const ros::TimerEvent &event);
@@ -182,6 +185,7 @@ private:
   ros::ServiceServer srvServer_DetermineCoordianteSystem_;
   ros::ServiceServer srvServer_Temp_;
   ros::ServiceServer srvServer_ReCalibrate;
+  ros::ServiceServer srvServer_SetSensorOffset;
 
   ros::Timer ftUpdateTimer_, ftPullTimer_;
 
