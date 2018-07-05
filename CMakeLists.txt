@@ -28,9 +28,11 @@ if(NOT EIGEN3_FOUND)
   # Fallback to cmake_modules
   find_package(cmake_modules REQUIRED)
   find_package(Eigen REQUIRED)
+  set(Eigen3_INCLUDE_DIRS ${Eigen_INCLUDE_DIRS})
+  set(Eigen3_LIBRARIES ${Eigen_LIBRARIES})
 else()
-  set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
-  set(Eigen_LIBRARIES ${EIGEN3_LIBRARIES})
+  set(Eigen3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+  set(Eigen3_LIBRARIES ${EIGEN3_LIBRARIES})
 endif()
 
 include(CheckCXXCompilerFlag)
@@ -68,7 +70,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  CATKIN_DEPENDS geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy tf2 tf2_ros tf2_geometry_msgs realtime_tools filters pluginlib
- DEPENDS Eigen
+ DEPENDS Eigen3
  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_sim
 )
 
@@ -81,7 +83,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
+  ${Eigen3_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME} src/force_torque_sensor_handle.cpp )
@@ -91,13 +93,13 @@ add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_genparam # For rosparam_handler
 )
 
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
 
 add_library(${PROJECT_NAME}_sim src/force_torque_sensor_sim.cpp )
-target_link_libraries(${PROJECT_NAME}_sim ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_sim ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_node src/force_torque_sensor_node.cpp)
-target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME} ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
 
 #############
 ## Install ##
