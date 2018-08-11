@@ -608,14 +608,8 @@ bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::stri
       _num_transform_errors++;
       return false;
     }
-
-    temp_vector_in.vector = wrench.force;
-    tf2::doTransform(temp_vector_in, temp_vector_out, transform);
-    transformed->force = temp_vector_out.vector;
-
-    temp_vector_in.vector = wrench.torque;
-    tf2::doTransform(temp_vector_in, temp_vector_out, transform);
-    transformed->torque = temp_vector_out.vector;
+	
+    tf2::doTransform(wrench, transformed, transform);
 
     return true;
 }
