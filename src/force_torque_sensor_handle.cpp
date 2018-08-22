@@ -350,8 +350,7 @@ bool ForceTorqueSensorHandle::srvCallback_recalibrate(std_srvs::Trigger::Request
     cog.z = gravity_params_.CoG_z;
     force_value = gravity_params_.force;
     gravity.vector.z = -force_value;
-    tf2::doTransform(gravity, gravity_transformed,
-                     p_tfBuffer->lookupTransform(sensor_frame_, transform_frame_, ros::Time(0)));
+    tf2::doTransform(gravity, gravity_transformed, p_tfBuffer->lookupTransform(sensor_frame_, transform_frame_, ros::Time(0)));
     geometry_msgs::Wrench offset;
     calibrate(false, &offset);
     offset_.force.x -= gravity_transformed.vector.x;
@@ -409,7 +408,7 @@ geometry_msgs::Wrench ForceTorqueSensorHandle::makeAverageMeasurement(uint numbe
       geometry_msgs::Wrench output;
       //std::cout<<"frame id"<< frame_id<<std::endl;
       if (frame_id.compare("") != 0) {
-      if (not transform_wrench(frame_id, sensor_frame_, moving_mean_filtered_wrench.wrench, &output))
+      if (not transform_wrench(frame_id, sensor_frame_, moving_mean_filtered_wrench.wrench, output))
       {
 	  num_of_errors++;
 	  if (num_of_errors > 200){
@@ -555,7 +554,7 @@ void ForceTorqueSensorHandle::filterFTData(){
 
     transformed_data.header.stamp = moving_mean_filtered_wrench.header.stamp;
     transformed_data.header.frame_id = transform_frame_;
-    if (transform_wrench(transform_frame_, sensor_frame_, moving_mean_filtered_wrench.wrench, &transformed_data.wrench))
+    if (transform_wrench(transform_frame_, sensor_frame_, moving_mean_filtered_wrench.wrench, transformed_data.wrench))
     {
       //gravity compensation
       if(useGravityCompensator)
@@ -590,10 +589,9 @@ void ForceTorqueSensorHandle::filterFTData(){
     }
 }
 
-bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed)
+bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench transformed)
 {
   geometry_msgs::TransformStamped transform;
-  geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;
 
   try
     {
