@@ -6,4 +6,4 @@
 - git:
     uri: 'https://github.com/cbandera/rosparam_handler.git'
     local-name: rosparam_handler
-    version: master
+    version: fix/map_vec_streamop
