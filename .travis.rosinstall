@@ -6,3 +6,7 @@
     uri: 'https://github.com/iirob/rosparam_handler.git'
     local-name: rosparam_handler
     version: master
+- git:
+    uri: 'https://github.com/KITrobotics/geometry2.git'
+    local-name: geometry2
+    version: WrenchTransform-backport
