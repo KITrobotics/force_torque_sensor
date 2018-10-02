@@ -1,9 +1,12 @@
 axis_linear: { x: 1, y: 0, z: 4 }  # Left thumb stick 
-scale_linear: { x: 12.0, y: 12.0, z: 12.0 } 
+scale_linear: { x: 12.0, y: 12.0, z: 12.0 }
+scale_linear_turbo: { x: 24.0, y: 24.0, z: 24.0 }
 
 axis_angular: { roll: 4, pitch: 3, yaw: 2 }  # Right thumb stick 
 scale_angular: { roll: 12.0, pitch: 12.0, yaw: 12.0 } 
+scale_angular_turbo: { roll: 24.0, pitch: 24.0, yaw: 24.0 }
 
 enable_button: 5
+enable_turbo_button: 4
 
 
