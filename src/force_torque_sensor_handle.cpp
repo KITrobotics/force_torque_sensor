@@ -134,6 +134,7 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     srvServer_DetermineCoordianteSystem_ = nh_.advertiseService("DetermineCoordinateSystem", &ForceTorqueSensorHandle::srvCallback_DetermineCoordinateSystem, this);
     srvServer_Temp_ = nh_.advertiseService("GetTemperature", &ForceTorqueSensorHandle::srvReadDiagnosticVoltages, this);
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensorHandle::srvCallback_recalibrate, this);
+    srvServer_SetSensorOffset = nh_.advertiseService("SetSensorOffset", &ForceTorqueSensorHandle::srvCallback_setSensorOffset, this);
  
     // Read data from parameter server
     canType = can_params_.type;
@@ -349,8 +350,7 @@ bool ForceTorqueSensorHandle::srvCallback_recalibrate(std_srvs::Trigger::Request
     cog.z = gravity_params_.CoG_z;
     force_value = gravity_params_.force;
     gravity.vector.z = -force_value;
-    tf2::doTransform(gravity, gravity_transformed,
-                     p_tfBuffer->lookupTransform(sensor_frame_, transform_frame_, ros::Time(0)));
+    tf2::doTransform(gravity, gravity_transformed, p_tfBuffer->lookupTransform(sensor_frame_, transform_frame_, ros::Time(0)));
     geometry_msgs::Wrench offset;
     calibrate(false, &offset);
     offset_.force.x -= gravity_transformed.vector.x;
@@ -363,6 +363,21 @@ bool ForceTorqueSensorHandle::srvCallback_recalibrate(std_srvs::Trigger::Request
     res.message = "Successfully recalibrated FTS!";
     return true;
 }
+
+bool ForceTorqueSensorHandle::srvCallback_setSensorOffset(force_torque_sensor::SetSensorOffset::Request &req, force_torque_sensor::SetSensorOffset::Response &res)
+{
+    offset_.force.x = req.offset.force.x;
+    offset_.force.y = req.offset.force.y;
+    offset_.force.z = req.offset.force.z;
+    offset_.torque.x = req.offset.torque.x;
+    offset_.torque.y = req.offset.torque.y;
+    offset_.torque.z = req.offset.torque.z;
+
+    res.success = true;
+    res.message = "Offset is successfully set!";
+    return true;
+}
+
 
 bool ForceTorqueSensorHandle::calibrate(bool apply_after_calculation, geometry_msgs::Wrench *new_offset)
 {
@@ -393,7 +408,7 @@ geometry_msgs::Wrench ForceTorqueSensorHandle::makeAverageMeasurement(uint numbe
       geometry_msgs::Wrench output;
       //std::cout<<"frame id"<< frame_id<<std::endl;
       if (frame_id.compare("") != 0) {
-      if (not transform_wrench(frame_id, sensor_frame_, moving_mean_filtered_wrench.wrench, &output))
+      if (not transform_wrench(frame_id, sensor_frame_, moving_mean_filtered_wrench.wrench, output))
       {
 	  num_of_errors++;
 	  if (num_of_errors > 200){
@@ -539,7 +554,7 @@ void ForceTorqueSensorHandle::filterFTData(){
 
     transformed_data.header.stamp = moving_mean_filtered_wrench.header.stamp;
     transformed_data.header.frame_id = transform_frame_;
-    if (transform_wrench(transform_frame_, sensor_frame_, moving_mean_filtered_wrench.wrench, &transformed_data.wrench))
+    if (transform_wrench(transform_frame_, sensor_frame_, moving_mean_filtered_wrench.wrench, transformed_data.wrench))
     {
       //gravity compensation
       if(useGravityCompensator)
@@ -574,10 +589,9 @@ void ForceTorqueSensorHandle::filterFTData(){
     }
 }
 
-bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench *transformed)
+bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench transformed)
 {
   geometry_msgs::TransformStamped transform;
-  geometry_msgs::Vector3Stamped temp_vector_in, temp_vector_out;
 
   try
     {
@@ -592,35 +606,29 @@ bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::stri
       _num_transform_errors++;
       return false;
     }
-
-    temp_vector_in.vector = wrench.force;
-    tf2::doTransform(temp_vector_in, temp_vector_out, transform);
-    transformed->force = temp_vector_out.vector;
-
-    temp_vector_in.vector = wrench.torque;
-    tf2::doTransform(temp_vector_in, temp_vector_out, transform);
-    transformed->torque = temp_vector_out.vector;
+	
+    tf2::doTransform(wrench, transformed, transform);
 
     return true;
 }
 
-void ForceTorqueSensorHandle::reconfigureCalibrationRequest(force_torque_sensor::CalibrationConfig& config, uint32_t level){
+void ForceTorqueSensorHandle::reconfigureCalibrationRequest(force_torque_sensor::CalibrationConfig& config, uint32_t level)
+{
     calibration_params_.fromConfig(config);
 
     calibrationTBetween = calibration_params_.T_between_meas;
     m_staticCalibration = calibration_params_.isStatic;
 
-    std::map<std::string,double> forceVal,torqueVal;
-    forceVal = calibration_params_.force;
-    torqueVal = calibration_params_.torque;
-
-    m_calibOffset.force.x = forceVal["x"];
-    m_calibOffset.force.y = forceVal["y"];
-    m_calibOffset.force.z = forceVal["z"];
-    m_calibOffset.torque.x = torqueVal["x"];
-    m_calibOffset.torque.x = torqueVal["y"];
-    m_calibOffset.torque.x = torqueVal["z"];
-
+//     std::map<std::string,double> forceVal,torqueVal;
+//     forceVal = calibration_params_.force;
+//     torqueVal = calibration_params_.torque;
+//
+//     m_calibOffset.force.x = forceVal["x"];
+//     m_calibOffset.force.y = forceVal["y"];
+//     m_calibOffset.force.z = forceVal["z"];
+//     m_calibOffset.torque.x = torqueVal["x"];
+//     m_calibOffset.torque.y = torqueVal["y"];
+//     m_calibOffset.torque.z = torqueVal["z"];
 }
 
 void ForceTorqueSensorHandle::updateFTData(const ros::TimerEvent& event)

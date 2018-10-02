@@ -25,7 +25,7 @@ def calibrate_tool():
     else:
         joint_names = rospy.get_param('/arm/joint_names')
         controller_topic = '/arm/joint_trajectory_controller/command'
-        calcOffset_service = '/arm/CalculateOffsets'
+        calcOffset_service = '/arm/CalculateAverageMasurement'
 
     trajectory_pub = rospy.Publisher(controller_topic, JointTrajectory, latch=True, queue_size=1)
     average_measurements_srv = rospy.ServiceProxy(calcOffset_service, CalculateAverageMasurement)
