@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- publish joystick data -->
+  <node name="joy_pub" pkg="joy" type="joy_node">
+    <rosparam command="load" file="$(find force_torque_sensor)/config/joy.yaml"/>
+  </node>
+
+  <!-- format joystick data to force (published via /cmd_vel)-->
+  <node name="teleop" pkg="teleop_twist_joy" type="teleop_node">
+    <rosparam command="load" file="$(find force_torque_sensor)/config/teleop_sim.yaml"/>
+  </node>
+
+  <!-- publish data for simulated force torque sensor -->
+  <node name="fts" pkg="force_torque_sensor" type="force_torque_sensor_node" respawn="false" output="screen" >
+    <remap from="/cmd_force" to="/cmd_vel" />
+  </node>
+
+  <rosparam command="load" file="$(find force_torque_sensor)/config/sensor_configuration_sim.yaml"/>
+  <rosparam command="load" ns="Calibration/Offset" file="$(find force_torque_sensor)/config/sensor_offset.yaml" />
+
+</launch>
