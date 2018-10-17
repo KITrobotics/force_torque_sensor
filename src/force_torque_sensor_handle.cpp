@@ -48,14 +48,14 @@
 using namespace force_torque_sensor;
 
 ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame) :
-    hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
+    hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, rs485_params_{nh.getNamespace()+"/RS485"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     p_Ftc = sensor;
     prepareNode(output_frame);
 }
 
 ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, std::string sensor_name, std::string output_frame) :
-    hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
+    hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, rs485_params_{nh.getNamespace()+"/RS485"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     node_params_.fromParamServer();
 
@@ -95,6 +95,7 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     calibration_params_.fromParamServer();
     CS_params_.fromParamServer();
     can_params_.fromParamServer();
+    rs485_params_.fromParamServer();
     FTS_params_.fromParamServer();
     pub_params_.fromParamServer();
     node_params_.fromParamServer();
@@ -139,6 +140,8 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     canType = can_params_.type;
     canPath = can_params_.path;
     canBaudrate = can_params_.baudrate;
+    rs485Path = rs485_params_.path;
+    rs485Baudrate = rs485_params_.baudrate;
     ftsBaseID = FTS_params_.base_identifier;
     isAutoInit = FTS_params_.auto_init;
     nodePubFreq = node_params_.ft_pub_freq;
@@ -205,7 +208,22 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
         threshold_filter_->configure(nh_.getNamespace()+"/ThresholdFilter");
     }
 
-    p_Ftc->initCommunication(canType, canPath, canBaudrate, ftsBaseID);
+    //Start either CAN or RS485 communication
+    if (node_params_.sensor_hw == "ati_force_torque/ATIForceTorqueSensorHWCan")
+    {
+        std::cout << "Init communication of CAN" << std::endl;
+       p_Ftc->initCommunication(canType, canPath, canBaudrate, ftsBaseID);
+    }
+    else if (node_params_.sensor_hw == "ati_force_torque/ATIForceTorqueSensorHWRS485")
+    {
+        std::cout << "Init communication of RS485" << std::endl;
+       p_Ftc->initCommunication(0, rs485Path, rs485Baudrate, ftsBaseID);
+    }
+    else
+    {
+       ROS_ERROR("Sensor hardware plugin not recognized!");
+       return;
+    }
 
     if (isAutoInit)
     {
