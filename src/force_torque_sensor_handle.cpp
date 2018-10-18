@@ -48,14 +48,14 @@
 using namespace force_torque_sensor;
 
 ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame) :
-    hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, rs485_params_{nh.getNamespace()+"/RS485"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
+    hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, HWComm_params_{nh.getNamespace()+"/HWComm"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     p_Ftc = sensor;
     prepareNode(output_frame);
 }
 
 ForceTorqueSensorHandle::ForceTorqueSensorHandle(ros::NodeHandle& nh, std::string sensor_name, std::string output_frame) :
-    hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, can_params_{nh.getNamespace()+"/CAN"}, rs485_params_{nh.getNamespace()+"/RS485"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
+    hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_), nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, HWComm_params_{nh.getNamespace()+"/HWComm"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     node_params_.fromParamServer();
 
@@ -94,8 +94,7 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
 
     calibration_params_.fromParamServer();
     CS_params_.fromParamServer();
-    can_params_.fromParamServer();
-    rs485_params_.fromParamServer();
+    HWComm_params_.fromParamServer();
     FTS_params_.fromParamServer();
     pub_params_.fromParamServer();
     node_params_.fromParamServer();
@@ -137,11 +136,9 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     srvServer_ReCalibrate = nh_.advertiseService("Recalibrate", &ForceTorqueSensorHandle::srvCallback_recalibrate, this);
  
     // Read data from parameter server
-    canType = can_params_.type;
-    canPath = can_params_.path;
-    canBaudrate = can_params_.baudrate;
-    rs485Path = rs485_params_.path;
-    rs485Baudrate = rs485_params_.baudrate;
+    HWCommType = HWComm_params_.type;
+    HWCommPath = HWComm_params_.path;
+    HWCommBaudrate = HWComm_params_.baudrate;
     ftsBaseID = FTS_params_.base_identifier;
     isAutoInit = FTS_params_.auto_init;
     nodePubFreq = node_params_.ft_pub_freq;
@@ -207,23 +204,8 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
         useThresholdFilter = true;
         threshold_filter_->configure(nh_.getNamespace()+"/ThresholdFilter");
     }
-
-    //Start either CAN or RS485 communication
-    if (node_params_.sensor_hw == "ati_force_torque/ATIForceTorqueSensorHWCan")
-    {
-        std::cout << "Init communication of CAN" << std::endl;
-       p_Ftc->initCommunication(canType, canPath, canBaudrate, ftsBaseID);
-    }
-    else if (node_params_.sensor_hw == "ati_force_torque/ATIForceTorqueSensorHWRS485")
-    {
-        std::cout << "Init communication of RS485" << std::endl;
-       p_Ftc->initCommunication(0, rs485Path, rs485Baudrate, ftsBaseID);
-    }
-    else
-    {
-       ROS_ERROR("Sensor hardware plugin not recognized!");
-       return;
-    }
+    
+    p_Ftc->initCommunication(HWCommType, HWCommPath, HWCommBaudrate, ftsBaseID);
 
     if (isAutoInit)
     {
@@ -496,11 +478,11 @@ bool ForceTorqueSensorHandle::srvReadDiagnosticVoltages(force_torque_sensor::Dia
 
 void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
 {
-    int status = 0;
-
-    bool bRet = p_Ftc->readFTData(status, sensor_data.wrench.force.x, sensor_data.wrench.force.y, sensor_data.wrench.force.z,
-                                                        sensor_data.wrench.torque.x, sensor_data.wrench.torque.y, sensor_data.wrench.torque.z);
-    if (bRet != false)
+    ros::Time timestamp = ros::Time::now();
+    
+    if (p_Ftc->readFTData(0, sensor_data.wrench.force.x, sensor_data.wrench.force.y, sensor_data.wrench.force.z,
+                                                        sensor_data.wrench.torque.x, sensor_data.wrench.torque.y, sensor_data.wrench.torque.z)
+        != false)
     {
         sensor_data.header.stamp = ros::Time::now();
         sensor_data.header.frame_id = sensor_frame_;
@@ -516,9 +498,6 @@ void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
         //lowpass
         low_pass_filtered_data.header = sensor_data.header;
         if(useLowPassFilter){
-            std::vector<double> in_data= {(double)sensor_data.wrench.force.x, double(sensor_data.wrench.force.y), (double)sensor_data.wrench.force.z,(double)sensor_data.wrench.torque.x,(double)sensor_data.wrench.torque.y,(double)sensor_data.wrench.torque.z};
-            std::vector<double> out_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};
-
             low_pass_filter_->update(sensor_data,low_pass_filtered_data);
         }
         else low_pass_filtered_data = sensor_data;
@@ -526,31 +505,30 @@ void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
         //moving_mean
         moving_mean_filtered_wrench.header = low_pass_filtered_data.header;
         if(useMovingMean){
-            std::vector<double> in_data= {(double)low_pass_filtered_data.wrench.force.x, double(low_pass_filtered_data.wrench.force.y), (double)low_pass_filtered_data.wrench.force.z,(double)low_pass_filtered_data.wrench.torque.x,(double)low_pass_filtered_data.wrench.torque.y,(double)low_pass_filtered_data.wrench.torque.z};
-            std::vector<double> out_data = {(double)moving_mean_filtered_wrench.wrench.force.x, double(moving_mean_filtered_wrench.wrench.force.y), (double)moving_mean_filtered_wrench.wrench.force.z,(double)moving_mean_filtered_wrench.wrench.torque.x,(double)moving_mean_filtered_wrench.wrench.torque.y,(double)moving_mean_filtered_wrench.wrench.torque.z};
-
             moving_mean_filter_->update(low_pass_filtered_data, moving_mean_filtered_wrench);
         }
         else moving_mean_filtered_wrench = low_pass_filtered_data;
 
-        if(is_pub_sensor_data_)
-            if (sensor_data_pub_->trylock()){
-                sensor_data_pub_->msg_ = sensor_data;
-                sensor_data_pub_->unlockAndPublish();
-            }
-
-        if(is_pub_low_pass_)
-            if (low_pass_pub_->trylock()){
-                low_pass_pub_->msg_ = low_pass_filtered_data;
-                low_pass_pub_->unlockAndPublish();
-            }
-
-        if(is_pub_moving_mean_)
-            if (moving_mean_pub_->trylock()){
-                moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
-                moving_mean_pub_->unlockAndPublish();
-            }
+//         if(is_pub_sensor_data_)
+//             if (sensor_data_pub_->trylock()){
+//                 sensor_data_pub_->msg_ = sensor_data;
+//                 sensor_data_pub_->unlockAndPublish();
+//             }
+// 
+//         if(is_pub_low_pass_)
+//             if (low_pass_pub_->trylock()){
+//                 low_pass_pub_->msg_ = low_pass_filtered_data;
+//                 low_pass_pub_->unlockAndPublish();
+//             }
+// 
+//         if(is_pub_moving_mean_)
+//             if (moving_mean_pub_->trylock()){
+//                 moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
+//                 moving_mean_pub_->unlockAndPublish();
+//             }
     }
+    
+     std::cout << (ros::Time::now() - timestamp).toNSec()/1000.0 << std::endl;
 }
 
 void ForceTorqueSensorHandle::filterFTData(){

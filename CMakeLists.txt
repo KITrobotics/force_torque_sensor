@@ -41,8 +41,7 @@ endif()
 
 generate_ros_parameter_files(
     cfg/CoordinateSystemCalibration.params
-    cfg/CanConfiguration.params
-    cfg/RS485Configuration.params
+    cfg/HWCommunicationConfiguration.params
     cfg/FTSConfiguration.params
     cfg/NodeConfiguration.params
     cfg/PublishConfiguration.params
