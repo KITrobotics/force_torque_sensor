@@ -2,8 +2,8 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.1 (2018-12-11)
+------------------
 * Added joystick and keyboard (#8)
 * Scenario update melodic (#7)
   * added scenario parameter
