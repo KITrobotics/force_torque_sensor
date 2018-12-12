@@ -1,4 +1,4 @@
-CAN:
+HWComm:
     type: 5           # CANITFTYPE_SOCKET_CAN
     path: can0
 

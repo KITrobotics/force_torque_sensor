@@ -8,8 +8,8 @@ Note: Current version of the package depends on iirob/iirob_filters package for 
 
 ## ROS Distro Support
 
-|         | Kinetic |
-|:-------:|:-------:|
-| Branch  | [`kinetic-devel`](https://github.com/KITrobotics/force_torque_sensor/tree/kinetic-devel) |
-| Status  | [![Build Status](https://travis-ci.org/KITrobotics/force_torque_sensor.svg?branch=kinetic-devel)](https://travis-ci.org/KITrobotics/force_torque_sensor) |
-| Version | [version](http://repositories.ros.org/status_page/ros_kinetic_default.html?q=force_torque_sensor) |
+|         | Kinetic | Melodic |
+|:-------:|:-------:|:-------:|
+| Branch  | [`kinetic-devel`](https://github.com/KITrobotics/force_torque_sensor/tree/kinetic-devel) | [`melodic`](https://github.com/KITrobotics/force_torque_sensor/tree/melodic) |
+| Status  | [![Build Status](https://travis-ci.org/KITrobotics/force_torque_sensor.svg?branch=kinetic-devel)](https://travis-ci.org/KITrobotics/force_torque_sensor) | [![Build Status](https://travis-ci.org/KITrobotics/force_torque_sensor.svg?branch=melodic)](https://travis-ci.org/KITrobotics/force_torque_sensor) |
+| Version | [version](http://repositories.ros.org/status_page/ros_kinetic_default.html?q=force_torque_sensor) | [version](http://repositories.ros.org/status_page/ros_melodic_default.html?q=force_torque_sensor) |
