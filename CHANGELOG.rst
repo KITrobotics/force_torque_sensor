@@ -2,8 +2,8 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2018-12-12)
+------------------
 * Update CMakeLists.txt
 * Updated INSTALL paths
 * Update CMakeLists.txt
