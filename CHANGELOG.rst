@@ -2,6 +2,22 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2018-12-11)
+------------------
+* Added joystick and keyboard (#8)
+* Scenario update melodic (#7)
+  * added scenario parameter
+  * fixed wrong variable names
+  * Added service for setting offets from outside
+  * Moved to Eigen3 from Eigen
+  * Update calibrate_tool.py
+  * Using WrenchTranform in tf2 instead of manual transform.
+  * Corrected error with doTranform for wrenches and corrected package.xml with package meta data.
+  * Update .travis.yml
+  * Update .travis.rosinstall
+* Added Melodic in overview
+* Added travis config for melodic
+
 0.0.1 (2018-12-12)
 ------------------
 * Update CMakeLists.txt
