@@ -509,26 +509,26 @@ void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
         }
         else moving_mean_filtered_wrench = low_pass_filtered_data;
 
-//         if(is_pub_sensor_data_)
-//             if (sensor_data_pub_->trylock()){
-//                 sensor_data_pub_->msg_ = sensor_data;
-//                 sensor_data_pub_->unlockAndPublish();
-//             }
-// 
-//         if(is_pub_low_pass_)
-//             if (low_pass_pub_->trylock()){
-//                 low_pass_pub_->msg_ = low_pass_filtered_data;
-//                 low_pass_pub_->unlockAndPublish();
-//             }
-// 
-//         if(is_pub_moving_mean_)
-//             if (moving_mean_pub_->trylock()){
-//                 moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
-//                 moving_mean_pub_->unlockAndPublish();
-//             }
+        if(is_pub_sensor_data_)
+            if (sensor_data_pub_->trylock()){
+                sensor_data_pub_->msg_ = sensor_data;
+                sensor_data_pub_->unlockAndPublish();
+            }
+
+        if(is_pub_low_pass_)
+            if (low_pass_pub_->trylock()){
+                low_pass_pub_->msg_ = low_pass_filtered_data;
+                low_pass_pub_->unlockAndPublish();
+            }
+
+        if(is_pub_moving_mean_)
+            if (moving_mean_pub_->trylock()){
+                moving_mean_pub_->msg_ = moving_mean_filtered_wrench;
+                moving_mean_pub_->unlockAndPublish();
+            }
     }
     
-     std::cout << (ros::Time::now() - timestamp).toNSec()/1000.0 << std::endl;
+//      std::cout << (ros::Time::now() - timestamp).toNSec()/1000.0 << " ms" << std::endl;
 }
 
 void ForceTorqueSensorHandle::filterFTData(){
