@@ -42,7 +42,7 @@ endif()
 
 generate_ros_parameter_files(
     cfg/CoordinateSystemCalibration.params
-    cfg/CanConfiguration.params
+    cfg/HWCommunicationConfiguration.params
     cfg/FTSConfiguration.params
     cfg/NodeConfiguration.params
     cfg/PublishConfiguration.params
@@ -70,6 +70,8 @@ catkin_package(
  INCLUDE_DIRS include
  CATKIN_DEPENDS geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy realtime_tools pluginlib tf2 tf2_ros
  DEPENDS Eigen3
+ CATKIN_DEPENDS geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy realtime_tools pluginlib tf2 tf2_ros tf2_geometry_msgs
+ DEPENDS Eigen
  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_sim
 )
 

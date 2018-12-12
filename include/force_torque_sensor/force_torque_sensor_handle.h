@@ -79,7 +79,7 @@ typedef unsigned char uint8_t;
 
 #include <dynamic_reconfigure/server.h>
 #include <force_torque_sensor/CoordinateSystemCalibrationParameters.h>
-#include <force_torque_sensor/CanConfigurationParameters.h>
+#include <force_torque_sensor/HWCommunicationConfigurationParameters.h>
 #include <force_torque_sensor/FTSConfigurationParameters.h>
 #include <force_torque_sensor/PublishConfigurationParameters.h>
 #include <force_torque_sensor/NodeConfigurationParameters.h>
@@ -127,7 +127,7 @@ private:
   double interface_torque_[3];
 
   force_torque_sensor::CoordinateSystemCalibrationParameters CS_params_;
-  force_torque_sensor::CanConfigurationParameters can_params_;
+  force_torque_sensor::HWCommunicationConfigurationParameters HWComm_params_;
   force_torque_sensor::FTSConfigurationParameters FTS_params_;
   force_torque_sensor::PublishConfigurationParameters pub_params_;
   force_torque_sensor::NodeConfigurationParameters node_params_;
@@ -166,10 +166,10 @@ private:
 
   uint _num_transform_errors;
 
-  // CAN parameters
-  int canType;
-  std::string canPath;
-  int canBaudrate;
+  // HWComm parameters
+  int HWCommType; // Only important if can is used
+  std::string HWCommPath;
+  int HWCommBaudrate;
   int ftsBaseID;
   double nodePubFreq, nodePullFreq;
   uint calibrationNMeasurements;
