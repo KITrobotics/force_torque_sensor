@@ -228,8 +228,6 @@ void ForceTorqueSensorHandle::init_sensor(std::string& msg, bool& success)
             // start timer for reading FT-data
             ftPullTimer_.start();
 
-            //ros::Duration::sleep(5);
-
             m_isInitialized = true;
             success = true;
             msg = "FTS initalised!";
@@ -493,7 +491,7 @@ bool ForceTorqueSensorHandle::srvReadDiagnosticVoltages(force_torque_sensor::Dia
 
 void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
 {
-    ros::Time timestamp = ros::Time::now();
+//     ros::Time timestamp = ros::Time::now();
     
     if (p_Ftc->readFTData(0, sensor_data.wrench.force.x, sensor_data.wrench.force.y, sensor_data.wrench.force.z,
                                                         sensor_data.wrench.torque.x, sensor_data.wrench.torque.y, sensor_data.wrench.torque.z)
