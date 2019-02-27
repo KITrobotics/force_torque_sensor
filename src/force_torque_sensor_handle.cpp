@@ -583,7 +583,7 @@ void ForceTorqueSensorHandle::filterFTData(){
     }
 }
 
-bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench transformed)
+bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench& transformed)
 {
   geometry_msgs::TransformStamped transform;
 
@@ -602,7 +602,7 @@ bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::stri
     }
 	
     tf2::doTransform(wrench, transformed, transform);
-
+   
     return true;
 }
 
