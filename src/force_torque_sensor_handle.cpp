@@ -228,8 +228,6 @@ void ForceTorqueSensorHandle::init_sensor(std::string& msg, bool& success)
             // start timer for reading FT-data
             ftPullTimer_.start();
 
-            //ros::Duration::sleep(5);
-
             m_isInitialized = true;
             success = true;
             msg = "FTS initalised!";
@@ -493,8 +491,7 @@ bool ForceTorqueSensorHandle::srvReadDiagnosticVoltages(force_torque_sensor::Dia
 
 void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
 {
-    ros::Time timestamp = ros::Time::now();
-    
+//     ros::Time timestamp = ros::Time::now();  
     if (p_Ftc->readFTData(0, sensor_data.wrench.force.x, sensor_data.wrench.force.y, sensor_data.wrench.force.z,
                                                         sensor_data.wrench.torque.x, sensor_data.wrench.torque.y, sensor_data.wrench.torque.z)
         != false)
@@ -585,7 +582,7 @@ void ForceTorqueSensorHandle::filterFTData(){
     }
 }
 
-bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench transformed)
+bool ForceTorqueSensorHandle::transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench& transformed)
 {
   geometry_msgs::TransformStamped transform;
 
@@ -614,17 +611,6 @@ void ForceTorqueSensorHandle::reconfigureCalibrationRequest(force_torque_sensor:
 
     calibrationTBetween = calibration_params_.T_between_meas;
     m_staticCalibration = calibration_params_.isStatic;
-
-//     std::map<std::string,double> forceVal,torqueVal;
-//     forceVal = calibration_params_.force;
-//     torqueVal = calibration_params_.torque;
-//
-//     m_calibOffset.force.x = forceVal["x"];
-//     m_calibOffset.force.y = forceVal["y"];
-//     m_calibOffset.force.z = forceVal["z"];
-//     m_calibOffset.torque.x = torqueVal["x"];
-//     m_calibOffset.torque.y = torqueVal["y"];
-//     m_calibOffset.torque.z = torqueVal["z"];
 }
 
 void ForceTorqueSensorHandle::updateFTData(const ros::TimerEvent& event)

@@ -120,7 +120,8 @@ public:
 private:
   void updateFTData(const ros::TimerEvent &event);
   geometry_msgs::Wrench makeAverageMeasurement(uint number_of_measurements, double time_between_meas, std::string frame_id="");
-  bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench transformed);
+
+  bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench& transformed);
 
   // Arrays for hardware_interface
   double interface_force_[3];

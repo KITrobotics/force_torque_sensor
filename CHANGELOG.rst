@@ -18,6 +18,7 @@ Changelog for package force_torque_sensor
 * Added Melodic in overview
 * Added travis config for melodic
 
+
 0.0.1 (2018-12-12)
 ------------------
 * Update CMakeLists.txt
