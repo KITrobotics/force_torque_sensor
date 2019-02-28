@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="fts_sim" params="parent name *origin">
+
+        <joint name="${name}_base_joint" type="fixed">
+            <xacro:insert_block name="origin" />
+            <parent link="${parent}"/>
+            <child link="${name}_base_link" />
+        </joint>
+
+        <link name="${name}_base_link">
+            <inertial>
+                <mass value="0.01" />
+                <origin xyz="0 0 0" />
+                <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+            </inertial>
+            <visual>
+                <geometry>
+	                <cylinder length="0.03" radius="0.2"/>
+                </geometry>
+                <material name="DarkGrey">
+                  <color rgba="0.4 0.4 0.4 1.0"/>
+                </material>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder length="0.03" radius="0.2"/>
+                </geometry>
+            </collision>
+        </link>
+				
+        <link name="${name}_tool_link"/>
+
+        <joint name="${name}_tool_joint" type="fixed">
+            <origin xyz="0 0 0.03" rpy="0 0 0" />
+            <parent link="${name}_base_link"/>
+            <child link="${name}_tool_link" />
+        </joint>
+				
+        <link name="${name}_reference_link"/>
+
+        <joint name="${name}_reference_joint" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <parent link="${name}_tool_link"/>
+            <child link="${name}_reference_link" />
+        </joint>
+
+  </xacro:macro>
+
+</robot>

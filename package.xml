@@ -35,5 +35,6 @@
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <force_torque_sensor plugin="${prefix}/force_torque_sensor_plugin.xml"/>
+    <hardware_interface plugin="${prefix}/hardware_interface_plugin.xml"/>
   </export>
 </package>

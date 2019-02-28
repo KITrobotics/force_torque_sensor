@@ -68,7 +68,7 @@ generate_messages(
 ###################################
 catkin_package(
  INCLUDE_DIRS include
- CATKIN_DEPENDS geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy realtime_tools pluginlib tf2 tf2_ros
+ CATKIN_DEPENDS geometry_msgs iirob_filters message_runtime roscpp std_msgs std_srvs rospy realtime_tools pluginlib tf2 tf2_ros hardware_interface
  DEPENDS Eigen3
  LIBRARIES ${PROJECT_NAME} ${PROJECT_NAME}_sim
 )
@@ -85,7 +85,11 @@ include_directories(
   ${Eigen3_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} src/force_torque_sensor_handle.cpp )
+add_library(${PROJECT_NAME}
+	src/force_torque_sensor_handle.cpp
+	src/force_torque_sensor_hw.cpp
+	src/force_torque_sensor_hw_handler.cpp
+)
 add_dependencies(${PROJECT_NAME}
   ${PROJECT_NAME}_gencfg  # For dynamic_reconfigure
   ${PROJECT_NAME}_generate_messages_cpp
@@ -118,5 +122,8 @@ install(DIRECTORY config/ cfg/
 )
 
 install(FILES force_torque_sensor_plugin.xml
+DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(FILES hardware_interface_plugin.xml
 DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 

@@ -1,0 +1,21 @@
+<library path="lib/libforce_torque_sensor">
+	<class name="force_torque_sensor/ForceTorqueSensorHW" type="hardware_interface::ForceTorqueSensorHW" base_class_type="hardware_interface::SensorHW">
+		<description>
+			FTS interface
+		</description>
+	</class>
+
+	<class name="force_torque_sensor/ForceTorqueSensorHWHandler" type="force_torque_sensor::ForceTorqueSensorHWHandler" base_class_type="hardware_interface::SensorHW"> 
+	  <description>
+	    Force Torque Sensor Handler
+	  </description>
+  </class>
+</library>
+
+<library path="lib/libforce_torque_sensor_sim">
+	<class name="force_torque_sensor/ForceTorqueSensorSim" type="force_torque_sensor::ForceTorqueSensorSim" base_class_type="hardware_interface::SensorHW">
+		<description>
+			Simulated Force Torque Sensor
+		</description>
+	</class>
+</library>
