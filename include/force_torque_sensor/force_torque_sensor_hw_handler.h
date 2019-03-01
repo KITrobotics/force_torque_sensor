@@ -41,8 +41,8 @@
  *
  ****************************************************************/
 
-#ifndef FORCETORQUESENSORHANDLE_INCLUDEDEF_H
-#define FORCETORQUESENSORHANDLE_INCLUDEDEF_H
+#ifndef FORCETORQUESENSORHWHANDLER_INCLUDEDEF_H
+#define FORCETORQUESENSORHWHANDLER_INCLUDEDEF_H
 
 #include <hardware_interface/force_torque_sensor_interface.h>
 #include <force_torque_sensor/force_torque_sensor_hw.h>
