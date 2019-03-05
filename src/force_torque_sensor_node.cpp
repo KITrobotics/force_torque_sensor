@@ -1,4 +1,4 @@
-#include <force_torque_sensor/force_torque_sensor_handle.h>
+#include <force_torque_sensor/force_torque_sensor_hw_handler.h>
 #include <force_torque_sensor/force_torque_sensor_sim.h>
 #include <force_torque_sensor/NodeConfigurationParameters.h>
 
@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 
     node_params_.fromParamServer();
 
-    new force_torque_sensor::ForceTorqueSensorHandle(nh, node_params_.sensor_frame,node_params_.transform_frame);
+    new force_torque_sensor::ForceTorqueSensorHWHandler(nh, node_params_.sensor_frame,node_params_.transform_frame);
 
     ROS_INFO("ForceTorque Sensor Node running.");
 

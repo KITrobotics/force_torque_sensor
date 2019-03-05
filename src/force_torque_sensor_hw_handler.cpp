@@ -49,50 +49,85 @@ using namespace force_torque_sensor;
 
 ForceTorqueSensorHWHandler::ForceTorqueSensorHWHandler() : calibration_params_ {nh_.getNamespace() + "/Calibration/Offset"}, CS_params_ {nh_.getNamespace() }, HWComm_params_ {nh_.getNamespace() + "/HWComm"}, FTS_params_ {nh_.getNamespace() + "/FTS"}, pub_params_ {nh_.getNamespace() + "/Publish"}, node_params_ {nh_.getNamespace() + "/Node"}, gravity_params_ {nh_.getNamespace() + "/GravityCompensation/params"} {}
 
-bool ForceTorqueSensorHWHandler::init(ros::NodeHandle &root_nh, ros::NodeHandle &sensor_hw_nh)
+ForceTorqueSensorHWHandler::ForceTorqueSensorHWHandler(ros::NodeHandle& nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame) :
+    nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, HWComm_params_{nh.getNamespace()+"/HWComm"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
+{
+    p_Ftc = sensor;
+    using_timer = true;
+    prepareNode(output_frame);
+    registerHandleAndInterface(sensor_name, output_frame);
+}
+
+ForceTorqueSensorHWHandler::ForceTorqueSensorHWHandler(ros::NodeHandle& nh, std::string sensor_name, std::string output_frame) :
+    nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, HWComm_params_{nh.getNamespace()+"/HWComm"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     node_params_.fromParamServer();
+    using_timer = true;
+    loadSensor(node_params_.sensor_hw, output_frame);
+    registerHandleAndInterface(sensor_name, output_frame);
+}
 
+void ForceTorqueSensorHWHandler::registerHandleAndInterface(std::string sensor_name, std::string output_frame)
+{
+    hardware_interface::ForceTorqueSensorHandle fts_handle(sensor_name, output_frame, interface_force_, interface_torque_);
+    fts_interface_.registerHandle(fts_handle);
+    registerInterface(&fts_interface_);
+}
+
+bool ForceTorqueSensorHWHandler::loadSensor(std::string sensor_hw, std::string transform_frame)
+{
     sensor_loader_.reset(new pluginlib::ClassLoader<hardware_interface::ForceTorqueSensorHW> ("force_torque_sensor", "hardware_interface::ForceTorqueSensorHW"));
-    if (!node_params_.sensor_hw.empty()) {
+    if (sensor_hw != "") {
         try {
-            sensor_.reset(sensor_loader_->createUnmanagedInstance(node_params_.sensor_hw));
-            ROS_INFO_STREAM("Sensor type " << node_params_.sensor_hw << " was successfully loaded.");
+            sensor_.reset(sensor_loader_->createUnmanagedInstance(sensor_hw));
+            ROS_INFO_STREAM("Sensor type " << sensor_hw << " was successfully loaded.");
 
             p_Ftc = sensor_.get();
-            prepareNode(node_params_.transform_frame);
+            prepareNode(transform_frame);
         } catch (pluginlib::PluginlibException &e) {
             ROS_ERROR_STREAM("Plugin failed to load:" << e.what());
+            return false;
         }
     } else {
         ROS_ERROR_STREAM("Failed to getParam 'sensor_hw' (namespace: " << nh_.getNamespace() << ").");
         ROS_ERROR("Sensor hardware failed to load");
         return false;
     }
+    return true;
+}
+
+bool ForceTorqueSensorHWHandler::init(ros::NodeHandle &root_nh, ros::NodeHandle &sensor_hw_nh)
+{
+    using_timer = false;
+    
+    node_params_.fromParamServer();
+
+    if (!loadSensor(node_params_.sensor_hw, node_params_.transform_frame)) { 
+        return false; 
+    }
 
     last_publish_time_ = ros::Time::now();
     last_pull_time_ = ros::Time::now();
 
-    hardware_interface::ForceTorqueSensorHandle fts_handle(FTS_params_.fts_name, node_params_.sensor_frame, interface_force_, interface_torque_);
-    fts_interface_.registerHandle(fts_handle);
-    registerInterface(&fts_interface_);
+    registerHandleAndInterface(FTS_params_.fts_name, node_params_.sensor_frame);
 
     return true;
 }
 
 void ForceTorqueSensorHWHandler::read(const ros::Time &time, const ros::Duration &period)
 {
+    if (using_timer) { return; }
     if (nodePullFreq > 0.0 && last_pull_time_ + ros::Duration(1.0 / nodePullFreq) < time) {
-        pullFTData();
+        pullFTData_();
     }
 
     if (nodePubFreq > 0.0 && last_publish_time_ + ros::Duration(1.0 / nodePubFreq) < time) {
-        updateFTData();
+        updateFTData_();
     }
 }
 
 void ForceTorqueSensorHWHandler::prepareNode(std::string output_frame)
-{    
+{
     ROS_INFO_STREAM ("Sensor is using namespace '" << nh_.getNamespace() << "'.");
 
     transform_frame_ = output_frame;
@@ -186,6 +221,11 @@ void ForceTorqueSensorHWHandler::prepareNode(std::string output_frame)
         transformed_data_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "transformed_data", 1);
     }
 
+    if (using_timer) {
+        ftUpdateTimer_ = nh_.createTimer(ros::Rate(nodePubFreq), &ForceTorqueSensorHWHandler::updateFTData, this, false, false);
+        ftPullTimer_ = nh_.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensorHWHandler::pullFTData, this, false, false);
+    }
+
     //Median Filter
     if(nh_.hasParam("MovingMeanFilter")) {
         useMovingMean = true;
@@ -229,6 +269,10 @@ void ForceTorqueSensorHWHandler::init_sensor(std::string& msg, bool& success)
         // read return init status and check it!
         if (p_Ftc->init())
         {
+            if (using_timer) {
+                ftPullTimer_.start();
+            }
+
             m_isInitialized = true;
             success = true;
             msg = "FTS initalised!";
@@ -266,6 +310,10 @@ void ForceTorqueSensorHWHandler::init_sensor(std::string& msg, bool& success)
             m_isInitialized = false;
             success = false;
             msg = "FTS could not be initilised! :/";
+        }
+        
+        if (using_timer) {
+            ftUpdateTimer_.start();
         }
     }
 }
@@ -489,7 +537,14 @@ bool ForceTorqueSensorHWHandler::srvReadDiagnosticVoltages(force_torque_sensor::
     return true;
 }
 
-void ForceTorqueSensorHWHandler::pullFTData()
+void ForceTorqueSensorHWHandler::pullFTData(const ros::TimerEvent &event)
+{
+    if (using_timer) {
+        pullFTData_();
+    }
+}
+
+void ForceTorqueSensorHWHandler::pullFTData_()
 {
 //     ros::Time timestamp = ros::Time::now();  
     if (p_Ftc->readFTData(0, sensor_data.wrench.force.x, sensor_data.wrench.force.y, sensor_data.wrench.force.z,
@@ -613,7 +668,14 @@ void ForceTorqueSensorHWHandler::reconfigureCalibrationRequest(force_torque_sens
     m_staticCalibration = calibration_params_.isStatic;
 }
 
-void ForceTorqueSensorHWHandler::updateFTData()
+void ForceTorqueSensorHWHandler::updateFTData(const ros::TimerEvent& event)
+{
+    if (using_timer) {
+        updateFTData_();
+    }
+}
+
+void ForceTorqueSensorHWHandler::updateFTData_()
 {
     filterFTData();
 

@@ -100,7 +100,9 @@ class ForceTorqueSensorHWHandler : public hardware_interface::ForceTorqueSensorH
 {
 public:
   ForceTorqueSensorHWHandler();
-  
+  ForceTorqueSensorHWHandler(ros::NodeHandle &nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame);
+  ForceTorqueSensorHWHandler(ros::NodeHandle &nh, std::string sensor_name, std::string output_frame);
+
   void prepareNode(std::string output_frame);
 
   void init_sensor(std::string &msg, bool &success);
@@ -118,7 +120,8 @@ public:
   void read ( const ros::Time& time, const ros::Duration& period );
 
 private:
-  void updateFTData();
+  void updateFTData(const ros::TimerEvent &event);
+  void updateFTData_();
   geometry_msgs::Wrench makeAverageMeasurement(uint number_of_measurements, double time_between_meas, std::string frame_id="");
 
   bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench& transformed);
@@ -138,7 +141,8 @@ private:
   std::string transform_frame_;
   std::string sensor_frame_;
 
-  void pullFTData();
+  void pullFTData(const ros::TimerEvent &event);
+  void pullFTData_();
   void filterFTData();
 
   // Arrays for dumping FT-Data
@@ -189,6 +193,7 @@ private:
   ros::ServiceServer srvServer_SetSensorOffset;
 
   ros::Timer ftUpdateTimer_, ftPullTimer_;
+  bool using_timer;
 
   tf2_ros::TransformListener *p_tfListener;
   tf2::Transform transform_ee_base;
@@ -224,6 +229,9 @@ private:
   hardware_interface::ForceTorqueSensorInterface fts_interface_;
   ros::Time last_publish_time_;
   ros::Time last_pull_time_;
+  
+  void registerHandleAndInterface(std::string sensor_name, std::string output_frame);
+  bool loadSensor(std::string sensor_hw, std::string transform_frame);
 };
 
 }
