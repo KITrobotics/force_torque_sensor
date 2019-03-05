@@ -86,7 +86,6 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-	src/force_torque_sensor_handle.cpp
 	src/force_torque_sensor_hw.cpp
 	src/force_torque_sensor_hw_handler.cpp
 )
