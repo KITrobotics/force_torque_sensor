@@ -5,7 +5,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/WrenchStamped.h>
-
+#include <hardware_interface/force_torque_sensor_interface.h>
 #include <force_torque_sensor/force_torque_sensor_hw.h>
 
 namespace force_torque_sensor
@@ -26,9 +26,15 @@ public:
   void subscribeData(const geometry_msgs::Twist::ConstPtr& msg);
   geometry_msgs::WrenchStamped joystick_data;
 
+  bool init ( ros::NodeHandle& root_nh, ros::NodeHandle &sensor_hw_nh );
+  void read ( const ros::Time& time, const ros::Duration& period );
+
 private:
   ros::NodeHandle nh_;
   ros::Subscriber force_input_subscriber;
+  hardware_interface::ForceTorqueSensorInterface fts_interface_;
+  double force_[3];
+  double torque_[3];
 };
 
 }

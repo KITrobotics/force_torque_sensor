@@ -41,8 +41,8 @@
  *
  ****************************************************************/
 
-#ifndef FORCETORQUESENSORHANDLE_INCLUDEDEF_H
-#define FORCETORQUESENSORHANDLE_INCLUDEDEF_H
+#ifndef FORCETORQUESENSORHWHANDLER_INCLUDEDEF_H
+#define FORCETORQUESENSORHWHANDLER_INCLUDEDEF_H
 
 #include <hardware_interface/force_torque_sensor_interface.h>
 #include <force_torque_sensor/force_torque_sensor_hw.h>
@@ -96,13 +96,13 @@ typedef unsigned char uint8_t;
 namespace force_torque_sensor
 {
 
-class ForceTorqueSensorHandle : public hardware_interface::ForceTorqueSensorHandle
+class ForceTorqueSensorHWHandler : public hardware_interface::ForceTorqueSensorHW
 {
 public:
+  ForceTorqueSensorHWHandler();
+  ForceTorqueSensorHWHandler(ros::NodeHandle &nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame);
+  ForceTorqueSensorHWHandler(ros::NodeHandle &nh, std::string sensor_name, std::string output_frame);
 
-  ForceTorqueSensorHandle(ros::NodeHandle &nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame);
-  ForceTorqueSensorHandle(ros::NodeHandle &nh, std::string sensor_name, std::string output_frame);
-  
   void prepareNode(std::string output_frame);
 
   void init_sensor(std::string &msg, bool &success);
@@ -116,9 +116,13 @@ public:
   bool srvCallback_recalibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool srvCallback_setSensorOffset(force_torque_sensor::SetSensorOffset::Request &req,
                                  force_torque_sensor::SetSensorOffset::Response &res);
+  bool init ( ros::NodeHandle& root_nh, ros::NodeHandle &sensor_hw_nh );
+  void read ( const ros::Time& time, const ros::Duration& period );
+  hardware_interface::ForceTorqueSensorHandle getFTSHandle();
 
 private:
   void updateFTData(const ros::TimerEvent &event);
+  void updateFTData_();
   geometry_msgs::Wrench makeAverageMeasurement(uint number_of_measurements, double time_between_meas, std::string frame_id="");
 
   bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench& transformed);
@@ -139,6 +143,7 @@ private:
   std::string sensor_frame_;
 
   void pullFTData(const ros::TimerEvent &event);
+  void pullFTData_();
   void filterFTData();
 
   // Arrays for dumping FT-Data
@@ -189,6 +194,7 @@ private:
   ros::ServiceServer srvServer_SetSensorOffset;
 
   ros::Timer ftUpdateTimer_, ftPullTimer_;
+  bool using_timer;
 
   tf2_ros::TransformListener *p_tfListener;
   tf2::Transform transform_ee_base;
@@ -220,7 +226,16 @@ private:
 
   boost::shared_ptr<pluginlib::ClassLoader<hardware_interface::ForceTorqueSensorHW>> sensor_loader_;
   boost::shared_ptr<hardware_interface::ForceTorqueSensorHW> sensor_;
+
+  hardware_interface::ForceTorqueSensorHandle fts_handle;
+  hardware_interface::ForceTorqueSensorInterface fts_interface_;
+  ros::Time last_publish_time_;
+  ros::Time last_pull_time_;
+
+  void registerHandleAndInterface(std::string sensor_name, std::string output_frame);
+  bool loadSensor(std::string sensor_hw, std::string transform_frame);
 };
 
 }
 #endif
+

@@ -2,10 +2,12 @@
 #ifndef FORCETORQUESENSORHW_INCLUDEDEF_H
 #define FORCETORQUESENSORHW_INCLUDEDEF_H
 
+#include <hardware_interface/sensor_hw.h>
+
 namespace hardware_interface
 {
 
-class ForceTorqueSensorHW
+class ForceTorqueSensorHW : public hardware_interface::SensorHW
 {
 public:
   ForceTorqueSensorHW() {};

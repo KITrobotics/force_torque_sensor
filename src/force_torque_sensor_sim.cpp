@@ -48,4 +48,23 @@ bool ForceTorqueSensorSim::readDiagnosticADCVoltages(int index, short int& value
     std::cout<<"ForceTorqueSensorSim"<<std::endl;
 }
 
+bool ForceTorqueSensorSim::init(ros::NodeHandle& root_nh, ros::NodeHandle &sensor_hw_nh) {
+    ros::NodeHandle nh_(sensor_hw_nh);
+    force_input_subscriber = nh_.subscribe("/cmd_force", 1, &ForceTorqueSensorSim::subscribeData, this);
+    hardware_interface::ForceTorqueSensorHandle fts_handle("ForceTorqueSensorSim", "fts_base_link", force_, torque_);
+    fts_interface_.registerHandle(fts_handle);
+    registerInterface(&fts_interface_);
+    return true;
+}
+
+void ForceTorqueSensorSim::read(const ros::Time& time, const ros::Duration& period) {
+    force_[0] = joystick_data.wrench.force.x;
+    force_[1] = joystick_data.wrench.force.y;
+    force_[2] = joystick_data.wrench.force.z;
+    torque_[0] = joystick_data.wrench.torque.x;
+    torque_[1] = joystick_data.wrench.torque.y;
+    torque_[2] = joystick_data.wrench.torque.z;
+}
+
 PLUGINLIB_EXPORT_CLASS(force_torque_sensor::ForceTorqueSensorSim, hardware_interface::ForceTorqueSensorHW)
+PLUGINLIB_EXPORT_CLASS(force_torque_sensor::ForceTorqueSensorSim, hardware_interface::SensorHW)

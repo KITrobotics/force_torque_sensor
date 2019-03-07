@@ -7,3 +7,7 @@
     uri: 'https://github.com/iirob/rosparam_handler.git'
     local-name: rosparam_handler
     version: master
+- git:
+    uri: 'https://github.com/KITrobotics/ros_control.git'
+    local-name: ros_control
+    version: combined_robot_sensor_hw
