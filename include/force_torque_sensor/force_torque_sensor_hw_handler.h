@@ -118,6 +118,7 @@ public:
                                  force_torque_sensor::SetSensorOffset::Response &res);
   bool init ( ros::NodeHandle& root_nh, ros::NodeHandle &sensor_hw_nh );
   void read ( const ros::Time& time, const ros::Duration& period );
+  hardware_interface::ForceTorqueSensorHandle getFTSHandle();
 
 private:
   void updateFTData(const ros::TimerEvent &event);
@@ -225,11 +226,12 @@ private:
 
   boost::shared_ptr<pluginlib::ClassLoader<hardware_interface::ForceTorqueSensorHW>> sensor_loader_;
   boost::shared_ptr<hardware_interface::ForceTorqueSensorHW> sensor_;
-  
+
+  hardware_interface::ForceTorqueSensorHandle fts_handle;
   hardware_interface::ForceTorqueSensorInterface fts_interface_;
   ros::Time last_publish_time_;
   ros::Time last_pull_time_;
-  
+
   void registerHandleAndInterface(std::string sensor_name, std::string output_frame);
   bool loadSensor(std::string sensor_hw, std::string transform_frame);
 };

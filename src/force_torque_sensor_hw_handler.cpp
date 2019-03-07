@@ -49,27 +49,30 @@ using namespace force_torque_sensor;
 
 ForceTorqueSensorHWHandler::ForceTorqueSensorHWHandler() : calibration_params_ {nh_.getNamespace() + "/Calibration/Offset"}, CS_params_ {nh_.getNamespace() }, HWComm_params_ {nh_.getNamespace() + "/HWComm"}, FTS_params_ {nh_.getNamespace() + "/FTS"}, pub_params_ {nh_.getNamespace() + "/Publish"}, node_params_ {nh_.getNamespace() + "/Node"}, gravity_params_ {nh_.getNamespace() + "/GravityCompensation/params"} {}
 
-ForceTorqueSensorHWHandler::ForceTorqueSensorHWHandler(ros::NodeHandle& nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame) :
+ForceTorqueSensorHWHandler::ForceTorqueSensorHWHandler(ros::NodeHandle& nh, hardware_interface::ForceTorqueSensorHW *sensor, std::string sensor_name, std::string output_frame) : fts_handle(hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_)),
     nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, HWComm_params_{nh.getNamespace()+"/HWComm"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     p_Ftc = sensor;
     using_timer = true;
     prepareNode(output_frame);
-    registerHandleAndInterface(sensor_name, output_frame);
 }
 
-ForceTorqueSensorHWHandler::ForceTorqueSensorHWHandler(ros::NodeHandle& nh, std::string sensor_name, std::string output_frame) :
+ForceTorqueSensorHWHandler::ForceTorqueSensorHWHandler(ros::NodeHandle& nh, std::string sensor_name, std::string output_frame) : fts_handle(hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_)),
     nh_(nh), calibration_params_{nh.getNamespace()+"/Calibration/Offset"}, CS_params_{nh.getNamespace()}, HWComm_params_{nh.getNamespace()+"/HWComm"}, FTS_params_{nh.getNamespace()+"/FTS"}, pub_params_{nh.getNamespace()+"/Publish"}, node_params_{nh.getNamespace()+"/Node"}, gravity_params_{nh.getNamespace()+"/GravityCompensation/params"}
 {
     node_params_.fromParamServer();
     using_timer = true;
     loadSensor(node_params_.sensor_hw, output_frame);
-    registerHandleAndInterface(sensor_name, output_frame);
+}
+
+hardware_interface::ForceTorqueSensorHandle ForceTorqueSensorHWHandler::getFTSHandle()
+{
+    return fts_handle;
 }
 
 void ForceTorqueSensorHWHandler::registerHandleAndInterface(std::string sensor_name, std::string output_frame)
 {
-    hardware_interface::ForceTorqueSensorHandle fts_handle(sensor_name, output_frame, interface_force_, interface_torque_);
+    fts_handle = hardware_interface::ForceTorqueSensorHandle(sensor_name, output_frame, interface_force_, interface_torque_);
     fts_interface_.registerHandle(fts_handle);
     registerInterface(&fts_interface_);
 }
