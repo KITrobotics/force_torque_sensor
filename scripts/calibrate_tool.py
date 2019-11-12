@@ -22,6 +22,10 @@ def calibrate_tool():
         joint_names = rospy.get_param('/controller_joint_names')
         controller_topic = '/position_trajectory_controller/command'
         calcOffset_service = '/CalculateAverageMasurement'
+    elif robot == "ur":
+        joint_names = rospy.get_param('/hardware_interface/joints')
+        controller_topic = '/pos_based_pos_traj_controller/command'
+        calcOffset_service = '/CalculateAverageMasurement'
     else:
         joint_names = rospy.get_param('/arm/joint_names')
         controller_topic = '/arm/joint_trajectory_controller/command'
@@ -38,6 +42,10 @@ def calibrate_tool():
     poses_kuka = [[0.0, -1.5707963, 1.5707963, 0.0, -1.5707963, 0.0],
                    [0.0, -1.5707963, 1.5707963, 0.0, 1.5707963, 0.0],
                    [0.0, -1.5707963, 1.5707963, 0.0, 0.0, 0.0]]
+    
+    poses_ur = [[1.5707963, -1.5707963, 1.5707963, -1.5707963, 1.5707963, 0.0],  # top
+                [1.5707963, -1.5707963, 1.5707963, -1.5707963, -1.5707963, 0.0], # home
+                [1.5707963, -1.5707963, 1.5707963, -1.5707963, 0.0, 0.0]]        # right
 
     measurement = []
     
@@ -50,6 +58,8 @@ def calibrate_tool():
         point.time_from_start = rospy.Duration(5.0)
         if robot == "kuka":
             point.positions = poses_kuka[i]
+        elif robot == "ur":
+            point.positions = poses_ur[i]
         else:
             point.positions = poses[i]
         
@@ -67,8 +77,8 @@ def calibrate_tool():
 
     CoG = Vector3()
 
-    Fg = (abs(measurement[0].force.z) + abs(measurement[1].force.z))/2.0;
-    CoG.z = (sqrt(measurement[2].torque.x*measurement[2].torque.x + measurement[2].torque.y*measurement[2].torque.y)) / Fg;
+    Fg = (abs(measurement[0].force.z) + abs(measurement[1].force.z))/2.0
+    CoG.z = (sqrt(measurement[2].torque.x*measurement[2].torque.x + measurement[2].torque.y*measurement[2].torque.y)) / Fg
     #CoG.z = (measurement[2].torque.x) / Fg;
 
     rospy.loginfo("Setting parametes for tool: " + tool_name)
@@ -79,7 +89,10 @@ def calibrate_tool():
     rospy.set_param('/temp/tool/force', Fg)
     
     if store_to_file:
-      call("rosparam dump -v `rospack find iirob_description`/tools/urdf/" + tool_name + "/" + robot_name + "_gravity.yaml /temp/tool", shell=True)
+        if robot == "ur":
+            call("rosparam dump -v `rospack find ipr_ur_bringup`/urdf/tools" + tool_name + "/" + robot_name + "_gravity.yaml /temp/tool", shell=True)
+        else:
+            call("rosparam dump -v `rospack find iirob_description`/tools/urdf/" + tool_name + "/" + robot_name + "_gravity.yaml /temp/tool", shell=True)
 
 
 if __name__ == "__main__":
