@@ -10,16 +10,21 @@ Changelog for package force_torque_sensor
 ------------------
 * All dependencies are released
 * Changes:
-  - UR calibration
-  - Use consistanant naming: calibration -> calacualte_offsets
-  - Rename 'Recalibrate' service to 'CalculateOffsetsWithoutGravity' -> it calculates offsets but removing gravity. This is usefull for manipulators.
-  - Refractoring and using global variables toward real-time performance.
-* - Code refraction
-  - Added new output with data after all filters
-  - Filters are now not activated if they are not defined
-  - Added mutex between two threads of reading data from the sensor and providing them for other components.
-  - Additinal debugging output when regarding setup of the SensorHandle
+
+  * UR calibration
+  * Use consistanant naming: calibration to calacualte\_offsets
+  * Rename 'Recalibrate' service to 'CalculateOffsetsWithoutGravity': it calculates offsets but removing gravity. This is usefull for manipulators.
+  * Refractoring and using global variables toward real-time performance.
+  
+* Code refraction
+
+  * Added new output with data after all filters
+  * Filters are now not activated if they are not defined
+  * Added mutex between two threads of reading data from the sensor and providing them for other components.
+  * Additinal debugging output when regarding setup of the SensorHandle
+  
 * Add changes from melodic in to kinetic (`#22 <https://github.com/KITrobotics/force_torque_sensor/issues/22>`_)
+
   * Added travis config for melodic
   * Added Melodic in overview
   * Scenario update melodic (`#7 <https://github.com/KITrobotics/force_torque_sensor/issues/7>`_)
@@ -32,8 +37,8 @@ Changelog for package force_torque_sensor
   * Update .travis.yml
   * Update .travis.rosinstall
   * Added joystick and keyboard (`#8 <https://github.com/KITrobotics/force_torque_sensor/issues/8>`_)
-  * generated changelog
-  * Contributors: Daniel Azanov, Denis Štogl, Florian Aumann, Gilbert Groten (GDwag)
+  * generated changelog 
+* Contributors: Daniel Azanov, Denis Štogl, Florian Aumann, Gilbert Groten (GDwag)
     
 0.8.1 (2018-12-11)
 ------------------
