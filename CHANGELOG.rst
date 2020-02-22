@@ -2,8 +2,8 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.9.2 (2020-02-22)
+------------------
 * Corrected changelogs and release data
 
 0.9.0 (2020-02-22)
