@@ -2,6 +2,10 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Corrected changelogs and release data
+
 0.9.0 (2020-02-22)
 ------------------
 * All dependencies are released
