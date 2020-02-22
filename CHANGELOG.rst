@@ -2,8 +2,8 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.9.0 (2020-02-22)
+------------------
 * All dependencies are released
 * Chagnes:
   - Use consistanant naming: calibration -> calacualte_offsets
