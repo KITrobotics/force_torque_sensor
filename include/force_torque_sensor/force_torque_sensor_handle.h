@@ -1,15 +1,13 @@
 /****************************************************************
  *
- * Copyright 2016 Intelligent Industrial Robotics (IIROB) Group,
+ * Copyright 2020 Intelligent Industrial Robotics (IIROB) Group,
  * Institute for Anthropomatics and Robotics (IAR) -
  * Intelligent Process Control and Robotics (IPR),
  * Karlsruhe Institute of Technology
  *
- * Maintainers: Denis Štogl, email: denis.stogl@kit.edu
- *                     Florian Heller
- *                     Vanessa Streuer
+ * Maintainer: Denis Štogl, email: denis.stogl@kit.edu
  *
- * Date of update: 2014-2016
+ * Date of update: 2014-2020
  *
  * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *
@@ -76,6 +74,8 @@ typedef unsigned char uint8_t;
 
 #include <math.h>
 #include <iostream>
+#include <mutex>
+#include <chrono>
 
 #include <dynamic_reconfigure/server.h>
 #include <force_torque_sensor/CoordinateSystemCalibrationParameters.h>
@@ -109,11 +109,11 @@ public:
   bool srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool srvCallback_CalculateOffset(force_torque_sensor::CalculateSensorOffset::Request &req, force_torque_sensor::CalculateSensorOffset::Response &res);
   bool srvCallback_CalculateAverageMasurement(force_torque_sensor::CalculateAverageMasurement::Request &req, force_torque_sensor::CalculateAverageMasurement::Response &res);
-  bool calibrate(bool apply_after_calculation,  geometry_msgs::Wrench *new_offset);
+  bool calculate_offset(bool apply_after_calculation,  geometry_msgs::Wrench *new_offset);
   bool srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool srvReadDiagnosticVoltages(force_torque_sensor::DiagnosticVoltages::Request &req,
                                  force_torque_sensor::DiagnosticVoltages::Response &res);
-  bool srvCallback_recalibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool srvCallback_CalculateOffsetWithoutGravity(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool srvCallback_setSensorOffset(force_torque_sensor::SetSensorOffset::Request &req,
                                  force_torque_sensor::SetSensorOffset::Response &res);
 
@@ -124,6 +124,7 @@ private:
   bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench& transformed);
 
   // Arrays for hardware_interface
+  std::string interface_frame_id_;
   double interface_force_[3];
   double interface_torque_[3];
 
@@ -139,10 +140,11 @@ private:
   std::string sensor_frame_;
 
   void pullFTData(const ros::TimerEvent &event);
-  void filterFTData();
+  geometry_msgs::WrenchStamped filterFTData();
 
-  // Arrays for dumping FT-Data
-  geometry_msgs::WrenchStamped gravity_compensated_force, moving_mean_filtered_wrench, threshold_filtered_force, transformed_data, sensor_data, low_pass_filtered_data;
+  // Wrenches for dumping FT-Data
+  geometry_msgs::WrenchStamped prefiltered_data_, filtered_data_input_; //Communication between read and filter/publish thread
+  geometry_msgs::WrenchStamped sensor_data, low_pass_filtered_data, moving_mean_filtered_data, transformed_data, gravity_compensated_force, threshold_filtered_force, output_data; //global variables to avoid on-runtime allocation
 
   double force_buffer_[3];
   double torque_buffer_[3];
@@ -156,16 +158,15 @@ private:
   geometry_msgs::Wrench offset_;
   geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
-  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>  *gravity_compensated_pub_, *threshold_filtered_pub_, *transformed_data_pub_, *sensor_data_pub_, *low_pass_pub_, *moving_mean_pub_;
+  realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>  *gravity_compensated_pub_, *threshold_filtered_pub_, *transformed_data_pub_, *sensor_data_pub_, *output_data_pub_, *low_pass_pub_, *moving_mean_pub_;
 
   bool is_pub_gravity_compensated_ = false;
   bool is_pub_threshold_filtered_ = false;
   bool is_pub_transformed_data_ = false;
   bool is_pub_sensor_data_ = false;
+  bool is_pub_output_data_ = false;
   bool is_pub_low_pass_ = false;
   bool is_pub_moving_mean_ = false;
-
-  uint _num_transform_errors;
 
   // HWComm parameters
   int HWCommType; // Only important if can is used
@@ -195,12 +196,10 @@ private:
 
   bool m_isInitialized;
   bool m_isCalibrated;
-  bool apply_offset;
+  bool apply_offset, ongoing_offset_calculation;
 
   // Variables for Static offset
   bool m_staticCalibration;
-  geometry_msgs::Wrench m_calibOffset;
-
 
   filters::FilterBase<geometry_msgs::WrenchStamped> *moving_mean_filter_ = new iirob_filters::MovingMeanFilter<geometry_msgs::WrenchStamped>();
   filters::FilterBase<geometry_msgs::WrenchStamped> *low_pass_filter_ = new iirob_filters::LowPassFilter<geometry_msgs::WrenchStamped>();
@@ -220,6 +219,8 @@ private:
 
   boost::shared_ptr<pluginlib::ClassLoader<hardware_interface::ForceTorqueSensorHW>> sensor_loader_;
   boost::shared_ptr<hardware_interface::ForceTorqueSensorHW> sensor_;
+
+  std::timed_mutex ft_data_lock_;
 };
 
 }

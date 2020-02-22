@@ -10,7 +10,7 @@ int main(int argc, char **argv)
     ros::AsyncSpinner spinner(4); // Use 4 threads
     spinner.start();
 
-    ros::NodeHandle nh("/fts");
+    ros::NodeHandle nh("fts");
 
     force_torque_sensor::NodeConfigurationParameters node_params_(nh.getNamespace()+"/Node");
 
@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
     new force_torque_sensor::ForceTorqueSensorHandle(nh, node_params_.sensor_frame,node_params_.transform_frame);
 
-    ROS_INFO("ForceTorque Sensor Node running.");
+    ROS_INFO("ForceTorqueSensor Node running.");
 
     ros::waitForShutdown();
 
