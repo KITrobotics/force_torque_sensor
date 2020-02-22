@@ -2,6 +2,11 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Changelog
+* Contributors: Denis Štogl
+
 0.9.2 (2020-02-22)
 ------------------
 * Corrected changelogs and release data
@@ -40,10 +45,12 @@ Changelog for package force_torque_sensor
   * generated changelog 
 * Contributors: Daniel Azanov, Denis Štogl, Florian Aumann, Gilbert Groten (GDwag)
     
+
 0.8.1 (2018-12-11)
 ------------------
 * Added joystick and keyboard (#8)
 * Scenario update melodic (#7)
+
   * added scenario parameter
   * fixed wrong variable names
   * Added service for setting offets from outside
@@ -53,6 +60,7 @@ Changelog for package force_torque_sensor
   * Corrected error with doTranform for wrenches and corrected package.xml with package meta data.
   * Update .travis.yml
   * Update .travis.rosinstall
+
 * Added Melodic in overview
 * Added travis config for melodic
 
@@ -82,4 +90,4 @@ Changelog for package force_torque_sensor
 * Moved class loader to handle
 * Added namespaces
 * First working version
-* Contributors: Denis Štogl, IIROB Praktikum 3, Timo Leitritz
+* Contributors: Denis Štogl, Timo Leitritz
