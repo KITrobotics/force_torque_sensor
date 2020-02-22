@@ -109,11 +109,11 @@ public:
   bool srvCallback_Init(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool srvCallback_CalculateOffset(force_torque_sensor::CalculateSensorOffset::Request &req, force_torque_sensor::CalculateSensorOffset::Response &res);
   bool srvCallback_CalculateAverageMasurement(force_torque_sensor::CalculateAverageMasurement::Request &req, force_torque_sensor::CalculateAverageMasurement::Response &res);
-  bool calibrate(bool apply_after_calculation,  geometry_msgs::Wrench *new_offset);
+  bool calculate_offset(bool apply_after_calculation,  geometry_msgs::Wrench *new_offset);
   bool srvCallback_DetermineCoordinateSystem(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool srvReadDiagnosticVoltages(force_torque_sensor::DiagnosticVoltages::Request &req,
                                  force_torque_sensor::DiagnosticVoltages::Response &res);
-  bool srvCallback_recalibrate(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool srvCallback_CalculateOffsetWithoutGravity(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool srvCallback_setSensorOffset(force_torque_sensor::SetSensorOffset::Request &req,
                                  force_torque_sensor::SetSensorOffset::Response &res);
 
@@ -143,7 +143,8 @@ private:
   geometry_msgs::WrenchStamped filterFTData();
 
   // Wrenches for dumping FT-Data
-  geometry_msgs::WrenchStamped sensor_data, low_pass_filtered_data, moving_mean_filtered_data, prefiltered_data_, filtered_data_input_, transformed_data, gravity_compensated_force, threshold_filtered_force;
+  geometry_msgs::WrenchStamped prefiltered_data_, filtered_data_input_; //Communication between read and filter/publish thread
+  geometry_msgs::WrenchStamped sensor_data, low_pass_filtered_data, moving_mean_filtered_data, transformed_data, gravity_compensated_force, threshold_filtered_force, output_data; //global variables to avoid on-runtime allocation
 
   double force_buffer_[3];
   double torque_buffer_[3];
@@ -195,11 +196,10 @@ private:
 
   bool m_isInitialized;
   bool m_isCalibrated;
-  bool apply_offset;
+  bool apply_offset, ongoing_offset_calculation;
 
   // Variables for Static offset
   bool m_staticCalibration;
-  geometry_msgs::Wrench m_calibOffset;
 
   filters::FilterBase<geometry_msgs::WrenchStamped> *moving_mean_filter_ = new iirob_filters::MovingMeanFilter<geometry_msgs::WrenchStamped>();
   filters::FilterBase<geometry_msgs::WrenchStamped> *low_pass_filter_ = new iirob_filters::LowPassFilter<geometry_msgs::WrenchStamped>();
