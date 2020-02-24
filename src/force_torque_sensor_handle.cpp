@@ -143,7 +143,7 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     ftPullTimer_ = nh_.createTimer(ros::Rate(nodePullFreq), &ForceTorqueSensorHandle::pullFTData, this, false, false);
 
     //Wrench Publisher
-    is_pub_sensor_data_=pub_params_.sensor_data;
+    is_pub_sensor_data_ = pub_params_.sensor_data;
     if(is_pub_sensor_data_){
         sensor_data_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "sensor_data", 1);
     }
@@ -158,11 +158,14 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
         output_data_pub_ = new realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>(nh_, "output_data", 1);
     }
 
+    ros::NodeHandle filters_nh("~");
+    ROS_INFO_STREAM ("Filters are using namespace '" << filters_nh.getNamespace() << "'.");
+
     //Median Filter
-    if(nh_.hasParam("MovingMeanFilter")) {
+    if(filters_nh.hasParam("MovingMeanFilter")) {
         ROS_INFO("Using MovingMeanFilter");
         useMovingMean = true;
-        moving_mean_filter_->configure(nh_.getNamespace()+"/MovingMeanFilter");
+        moving_mean_filter_->configure(filters_nh.getNamespace()+"/MovingMeanFilter");
 
         is_pub_moving_mean_=pub_params_.moving_mean;
         if(is_pub_moving_mean_){
@@ -173,10 +176,10 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     }
 
     //Low Pass Filter
-    if(nh_.hasParam("LowPassFilter")) {
+    if(filters_nh.hasParam("LowPassFilter")) {
         ROS_INFO("Using LowPassFilter");
         useLowPassFilter = true;
-        low_pass_filter_->configure(nh_.getNamespace()+"/LowPassFilter");
+        low_pass_filter_->configure(filters_nh.getNamespace()+"/LowPassFilter");
 
         is_pub_low_pass_ = pub_params_.low_pass;
         if(is_pub_low_pass_){
@@ -187,10 +190,10 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     }
 
     //Gravity Compenstation
-    if(nh_.hasParam("GravityCompensation")) {
+    if(filters_nh.hasParam("GravityCompensation")) {
         ROS_INFO("Using GravityCompensation");
         useGravityCompensator = true;
-        gravity_compensator_->configure(nh_.getNamespace()+"/GravityCompensation");
+        gravity_compensator_->configure(filters_nh.getNamespace()+"/GravityCompensation");
 
         // Read GravityParams also here to use for recalibration (see: srvCallback_CalculateOffsetWithoutGravity Function)
         gravity_params_.fromParamServer();
@@ -204,10 +207,10 @@ void ForceTorqueSensorHandle::prepareNode(std::string output_frame)
     }
 
     //Threshold Filter
-    if(nh_.hasParam("ThresholdFilter")) {
+    if(filters_nh.hasParam("ThresholdFilter")) {
         ROS_INFO("Using ThresholdFilter");
         useThresholdFilter = true;
-        threshold_filter_->configure(nh_.getNamespace()+"/ThresholdFilter");
+        threshold_filter_->configure(filters_nh.getNamespace()+"/ThresholdFilter");
 
         is_pub_threshold_filtered_=pub_params_.threshold_filtered;
         if(is_pub_threshold_filtered_){
@@ -242,7 +245,7 @@ void ForceTorqueSensorHandle::init_sensor(std::string& msg, bool& success)
 
             m_isInitialized = true;
             success = true;
-            msg = "FTS initalised!";
+            msg = "FTS initialized!";
 
             // Calibrate sensor
             if (m_staticCalibration)
@@ -281,7 +284,8 @@ void ForceTorqueSensorHandle::init_sensor(std::string& msg, bool& success)
         {
             m_isInitialized = false;
             success = false;
-            msg = "FTS could not be initilised! :/";
+            msg = "FTS could not be initialized! :/";
+            ROS_FATAL("FTS Hardware could not be initialized");
         }
         ftUpdateTimer_.start();
     }
@@ -434,7 +438,6 @@ geometry_msgs::Wrench ForceTorqueSensorHandle::makeAverageMeasurement(uint numbe
       }
       else {
         output = moving_mean_filtered_data.wrench;
-        ROS_INFO("Using no transformation z: %.5f", moving_mean_filtered_data.wrench.force.z);
       }
 
       measurement.force.x += output.force.x;
@@ -571,7 +574,7 @@ void ForceTorqueSensorHandle::pullFTData(const ros::TimerEvent &event)
 //      std::cout << (ros::Time::now() - timestamp).toNSec()/1000.0 << " ms" << std::endl;
 }
 
-geometry_msgs::WrenchStamped ForceTorqueSensorHandle::filterFTData(){
+void ForceTorqueSensorHandle::filterFTData(){
 
     if (ft_data_lock_.try_lock_for(std::chrono::milliseconds(1))) {
         filtered_data_input_ = prefiltered_data_;
@@ -651,14 +654,14 @@ void ForceTorqueSensorHandle::reconfigureCalibrationRequest(force_torque_sensor:
 
 void ForceTorqueSensorHandle::updateFTData(const ros::TimerEvent& event)
 {
+    filterFTData();
+
     if(is_pub_output_data_) {
         if (output_data_pub_->trylock()){
             output_data_pub_->msg_ = output_data;
             output_data_pub_->unlockAndPublish();
         }
     }
-
-    interface_frame_id_ = output_data.header.frame_id;
 
     interface_force_[0] = output_data.wrench.force.x;
     interface_force_[1] = output_data.wrench.force.y;

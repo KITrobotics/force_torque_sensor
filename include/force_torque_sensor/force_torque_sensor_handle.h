@@ -124,7 +124,6 @@ private:
   bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench& transformed);
 
   // Arrays for hardware_interface
-  std::string interface_frame_id_;
   double interface_force_[3];
   double interface_torque_[3];
 
@@ -140,7 +139,7 @@ private:
   std::string sensor_frame_;
 
   void pullFTData(const ros::TimerEvent &event);
-  geometry_msgs::WrenchStamped filterFTData();
+  void filterFTData();
 
   // Wrenches for dumping FT-Data
   geometry_msgs::WrenchStamped prefiltered_data_, filtered_data_input_; //Communication between read and filter/publish thread
