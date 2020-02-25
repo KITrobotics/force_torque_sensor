@@ -2,6 +2,17 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update README
+* Added static_application parameter to example configs.
+* Added functionality for static applications, i.e., the node looks only at the beginning for the transformation and u$
+* Reduced INFO output (changed to DEBUG)
+* Resorting of definitions in .h file
+* Removing used and unnecessary variables
+* Using private namespace for filters to be unified with iirob_filters implementation
+* Contributors: Denis Stogl
+
 0.9.3 (2020-02-22)
 ------------------
 * Changelog
