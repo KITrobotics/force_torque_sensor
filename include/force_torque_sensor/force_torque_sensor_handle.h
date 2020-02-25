@@ -122,6 +122,11 @@ private:
   geometry_msgs::Wrench makeAverageMeasurement(uint number_of_measurements, double time_between_meas, std::string frame_id="");
 
   bool transform_wrench(std::string goal_frame, std::string source_frame, geometry_msgs::Wrench wrench, geometry_msgs::Wrench& transformed);
+  bool updateTransform(std::string goal_frame, std::string source_frame);
+
+  void pullFTData(const ros::TimerEvent &event);
+  void filterFTData();
+
 
   // Arrays for hardware_interface
   double interface_force_[3];
@@ -138,46 +143,19 @@ private:
   std::string transform_frame_;
   std::string sensor_frame_;
 
-  void pullFTData(const ros::TimerEvent &event);
-  void filterFTData();
-
   // Wrenches for dumping FT-Data
   geometry_msgs::WrenchStamped prefiltered_data_, filtered_data_input_; //Communication between read and filter/publish thread
   geometry_msgs::WrenchStamped sensor_data, low_pass_filtered_data, moving_mean_filtered_data, transformed_data, gravity_compensated_force, threshold_filtered_force, output_data; //global variables to avoid on-runtime allocation
 
-  double force_buffer_[3];
-  double torque_buffer_[3];
-  double force_buffer_transformed_[3];
-  double torque_buffer_transformed_[3];
+  geometry_msgs::TransformStamped output_transform_;
 
   ros::NodeHandle nh_;
 
   //FT Data
   hardware_interface::ForceTorqueSensorHW *p_Ftc;
   geometry_msgs::Wrench offset_;
-  geometry_msgs::TransformStamped transform_ee_base_stamped;
   tf2_ros::Buffer *p_tfBuffer;
   realtime_tools::RealtimePublisher<geometry_msgs::WrenchStamped>  *gravity_compensated_pub_, *threshold_filtered_pub_, *transformed_data_pub_, *sensor_data_pub_, *output_data_pub_, *low_pass_pub_, *moving_mean_pub_;
-
-  bool is_pub_gravity_compensated_ = false;
-  bool is_pub_threshold_filtered_ = false;
-  bool is_pub_transformed_data_ = false;
-  bool is_pub_sensor_data_ = false;
-  bool is_pub_output_data_ = false;
-  bool is_pub_low_pass_ = false;
-  bool is_pub_moving_mean_ = false;
-
-  // HWComm parameters
-  int HWCommType; // Only important if can is used
-  std::string HWCommPath;
-  int HWCommBaudrate;
-  int ftsBaseID;
-  double nodePubFreq, nodePullFreq;
-  uint calibrationNMeasurements;
-  double calibrationTBetween;
-  int coordinateSystemNMeasurements;
-  int coordinateSystemTBetween;
-  int coordinateSystemPushDirection;
 
   // service servers
   ros::ServiceServer srvServer_Init_;
@@ -191,14 +169,10 @@ private:
   ros::Timer ftUpdateTimer_, ftPullTimer_;
 
   tf2_ros::TransformListener *p_tfListener;
-  tf2::Transform transform_ee_base;
 
   bool m_isInitialized;
   bool m_isCalibrated;
   bool apply_offset, ongoing_offset_calculation;
-
-  // Variables for Static offset
-  bool m_staticCalibration;
 
   filters::FilterBase<geometry_msgs::WrenchStamped> *moving_mean_filter_ = new iirob_filters::MovingMeanFilter<geometry_msgs::WrenchStamped>();
   filters::FilterBase<geometry_msgs::WrenchStamped> *low_pass_filter_ = new iirob_filters::LowPassFilter<geometry_msgs::WrenchStamped>();
@@ -207,7 +181,6 @@ private:
 
   bool useGravityCompensator=false;
   bool useThresholdFilter=false;
-
   bool useMovingMean = false;
   bool useLowPassFilter = false;
 

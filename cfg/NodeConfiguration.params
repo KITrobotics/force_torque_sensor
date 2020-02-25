@@ -7,6 +7,7 @@ gen.add("sensor_hw", paramtype="std::string", description="SensorHW plugin if pl
 gen.add("ft_pub_freq", paramtype="double", description="publish frequency", default=200, configurable=False)
 gen.add("ft_pull_freq", paramtype="double", description="sensor data pull frequency", default=800, configurable=False)
 gen.add("transform_frame", paramtype="std::string", description="reference coordinate system", default="fts_transform_frame", configurable=False)
+gen.add("static_application", paramtype="bool", description="does your FTS change it's position w.r.t. the robot's base (i.e. controller frame)", default="False", configurable=False);
 gen.add("sensor_frame", paramtype="std::string", description="sensor coordinate system", default="fts_reference_link", configurable=False)
 
 exit(gen.generate("force_torque_sensor", "ForceTorqueSensor", "NodeConfiguration"))
