@@ -2,8 +2,8 @@
 Changelog for package force_torque_sensor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2020-02-25)
+------------------
 * Update README
 * Added static_application parameter to example configs.
 * Added functionality for static applications, i.e., the node looks only at the beginning for the transformation and u$
