@@ -6,7 +6,7 @@
 
   <maintainer email="denis.stogl@kit.edu">Denis Štogl</maintainer>
 
-  <license>LGPLv3</license>
+  <license>Apache2.0</license>
 
 <!--   <url type="website">http://wiki.ros.org/force_torque_sensor</url> -->
   <url type="repository">https://github.com/KITrobotics/force_torque_sensor</url>
